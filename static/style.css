@@ -1,0 +1,52 @@
+/* https://fonts.google.com/specimen/EB+Garamond?query=eb+garamond */
+/* https://fonts.google.com/specimen/Urbanist?query=urbanist */
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&family=Urbanist:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+:root {
+    /* COLORS */
+    /* Realtime Colors link for selected colors: https://realtimecolors.com/?colors=020b13-fafdff-f19c5b-faf7c7-e11421 */
+    --text: #132009;
+    --background: #f1f9eb;
+    --primary: #61d16a;
+    --secondary: #d1b0e8;
+    --accent: #9e2e95;
+
+    /* FONTS */
+    --headings: 'EB Garamond', serif;
+    --texts: 'Urbanist', sans-serif;
+}
+
+/* RESET THE DEFAULT FEATURES */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+}
+
+a {
+    text-decoration: none;
+    color: var(--text) !important;
+}
+ul, li {
+    list-style: none;
+}
+
+/* layout.html */
+
+body {
+    background-color: var(--background);
+    font-family: var(--texts);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--headings);
+    font-weight: 800;
+    letter-spacing: 2pt;
+}
+.brand-name {
+    color: var(--accent);
+}
