@@ -50,3 +50,17 @@ h1, h2, h3, h4, h5, h6 {
 .brand-name {
     color: var(--accent);
 }
+select {
+    height: 2rem;
+    border: none;
+    /* background-color: var(--secondary); */
+}
+.navbar-expand-md {
+    font-size: large;
+}
+select option {
+    width: 5rem;
+}
+input[placeholder="Search"] {
+    margin: 0 1rem;
+}

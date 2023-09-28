@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Browse Books
+{% endblock %}
+
+{% block main %}
+    <select name="search" class="form-select-sm bg-secondary">
+        <option disabled selected hidden>Search by</option>
+        <option value="author">Author</option>
+        <option value="title">Title</option>
+    </select>
+    <input autocomplete="off" autofocus placeholder="Search" type="text" class="form-control-sm">
+    <datalist id="datalistoptions">
+        <option value="{{ title }}">
+        <option value="{{ author }}">
+    </datalist>
+    <button type="submit" class="btn btn-success">Search</button>
+{% endblock %}
+
+<!-- TODO: -->
+<!-- add for loop to option value (l-15,16) -->
