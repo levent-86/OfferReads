@@ -58,6 +58,9 @@ select {
 .navbar-expand-md {
     font-size: large;
 }
+.border-success {
+    margin-right: 4rem;
+}
 select option {
     width: 5rem;
 }
