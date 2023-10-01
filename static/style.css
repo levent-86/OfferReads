@@ -53,7 +53,6 @@ h1, h2, h3, h4, h5, h6 {
 select {
     height: 2rem;
     border: none;
-    /* background-color: var(--secondary); */
 }
 .navbar-expand-md {
     font-size: large;
@@ -66,4 +65,25 @@ select option {
 }
 input[placeholder="Search"] {
     margin: 0 1rem;
+}
+
+/* My Profile */
+.bi-person-circle {
+    color: darkgray;
+    font-size: 5rem;
+}
+.mp-hidden {
+    display: none;
+}
+.myp-show {
+    display: block;
+}
+input[type="file"] {
+    display: none;
+}
+.mp-text {
+    font-family: var(--headings);
+}
+.mp-deletep {
+    margin-top: 5rem;
 }

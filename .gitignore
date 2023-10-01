@@ -1,13 +1,4 @@
 
-__pycache__/app.cpython-311.pyc
-.vscode/launch.json
-__pycache__/helpers.cpython-311.pyc
-flask_session/1d3f8917e106f4e5c5dbdd000f7d0891
-flask_session/2029240f6d1128be89ddc32729463129
-flask_session/2d3533a8394099862dcd3a5036ccd10c
-flask_session/31ebebecb5f972ad7884d5e37ddf26f7
-flask_session/3a318f80f9996c53ed5116c667ebdca3
-flask_session/8e7447072a006ebf61d4e0d89c716321
-flask_session/9d14846f2a1f5b58490513c943d2549c
-flask_session/a1638199e5b96316dd5f747e6722ec78
-flask_session/a8ca11e061df4994390ebd2c46f611c8
+__pycache__*
+.vscode*
+flask_session*

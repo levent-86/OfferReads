@@ -3,7 +3,7 @@ from flask import Flask, flash, redirect, render_template, request, session
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import countries, login_required, login_not_required, greet
+from helpers import countries, login_required, login_not_required, greet_user
 
 # Configure application
 app = Flask(__name__)
@@ -25,7 +25,7 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 @app.route("/")
 def index():
-    return render_template("index.html", greet=greet())
+    return render_template("index.html", greet=greet_user())
 
 
 
@@ -185,3 +185,26 @@ def logout():
 @login_required
 def exchange():
     ...
+    # TODO
+
+
+
+@app.route("/myprofile", methods=["GET", "POST"])
+@login_required
+def myprofile():
+    # take user informations from data to variables
+    date = db.execute("SELECT date FROM users WHERE id = ?", session["user_id"])[0]["date"]
+    fname = db.execute("SELECT fname FROM users WHERE id = ?", session["user_id"])[0]["fname"]
+    lname = db.execute("SELECT lname FROM users WHERE id = ?", session["user_id"])[0]["lname"]
+    uname = db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])[0]["username"]
+    email = db.execute("SELECT email FROM users WHERE id = ?", session["user_id"])[0]["email"]
+    country = db.execute("SELECT country FROM users WHERE id = ?", session["user_id"])[0]["country"]
+    city = db.execute("SELECT city FROM users WHERE id = ?", session["user_id"])[0]["city"].title()
+    address = db.execute("SELECT address FROM users WHERE id = ?", session["user_id"])[0]["address"]
+    phone = db.execute("SELECT phone FROM users WHERE id = ?", session["user_id"])[0]["phone"]
+
+    if request.method == "POST":
+        ...
+        # TODO
+    else:
+        return render_template("myprofile.html", greet=greet_user(), date=date, fname=fname, lname=lname, username=uname, email=email, user_country=country, countries=countries(), city=city, address=address, phone=phone)

@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    My Profile
+{% endblock %}
+
+{% block main %}
+    <p>You are <a class="brand-name" href="/"><span class="mp-text"><span class="brand-name">Offer</span>Reads</span></a> member since {{ date }}</p>
+    <form action="/myprofile" method="post">
+        <div class="mb-4">
+            <!-- https://stackoverflow.com/a/25825731 -->
+            <label for="profilepic" class="mp-label"><i class="bi bi-person-circle"></i></label>
+            <input type="file" name="profilepic" id="profilepic" class="form-control mx-auto w-auto mp-disabled" disabled="disabled">
+        </div>
+        <div class="mb-4">
+            <input class="form-control mx-auto w-auto mp-disabled" id="fname" name="fname" placeholder="Name: {{ fname }}" type="text" disabled="disabled">
+        </div>
+        <div class="mb-4">
+            <input class="form-control mx-auto w-auto mp-disabled" id="lname" name="lname" placeholder="Last Name: {{ lname }}" type="text" disabled="disabled">
+        </div>
+        <div class="mb-4">
+            <input autocomplete="off" autofocus class="form-control mx-auto w-auto mp-disabled" id="username" name="username" placeholder="Username: {{ username }}" type="text" disabled="disabled">
+        </div>
+        <div class="mb-4">
+            <input autocomplete="off" class="form-control mx-auto w-auto mp-disabled" id="email" name="email" placeholder="Email: {{ email }}" type="email" disabled="disabled">
+        </div>
+        <div class="mb-4">
+            <input class="form-control mx-auto w-auto mp-disabled" name="password" placeholder="Your Old Password" type="password" disabled="disabled">
+        </div>
+        <div class="mb-4">
+            <input class="form-control mx-auto w-auto mp-disabled" name="newpass" placeholder="Your New Password" type="password" disabled="disabled">
+        </div>
+        <div class="mb-4">
+            <input class="form-control mx-auto w-auto mp-disabled" name="confirmpass" placeholder="Confirm New Password" type="password" disabled="disabled">
+        </div>
+        <div class="mb-4">
+            <select class="mp-disabled" name="countries" disabled="disabled">
+                <option selected disabled hidden>{{ user_country }}</option>
+                {% for country in countries %}
+                    <option value="{{ country }}">{{ country }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-4">
+            <input autocomplete="off" class="form-control mx-auto w-auto mp-disabled" id="city" name="city" placeholder="City: {{ city }}" type="text" disabled="disabled">
+        </div>
+        <div class="mb-4">
+            <input autocomplete="off" class="form-control mx-auto w-auto mp-disabled" id="address" name="address" placeholder="Addrerss: {{ address }}" type="text" disabled="disabled">
+        </div>
+        <div class="mb-4">
+            <input autocomplete="off" class="form-control mx-auto w-auto mp-disabled" id="phone" name="phone" placeholder="Phone: {{ phone }}" type="tel" disabled="disabled">
+        </div>
+        
+        <div class="mb-7">
+            <button type="button" class="btn btn-primary mp-show">Edit My Profile</button>
+            <button type="submit" class="btn btn-primary mp-hidden">APPLY CHANGES</button>
+        </div>
+        
+        <div class="mb-4">
+            <button type="submit" class="btn btn-danger mp-deletep">DELETE YOUR ACCOUNT</button>
+        </div>
+    </form>
+{% endblock %}
