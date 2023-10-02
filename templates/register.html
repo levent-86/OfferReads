@@ -7,18 +7,18 @@
 {% block main %}
     <form action="/register" method="post">
         <div class="mb-4">
-            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" id="username" name="username" placeholder="Username" type="text">
+            <input size="35" autocomplete="off" autofocus class="form-control form-control-lg mx-auto w-auto" id="username" name="username" placeholder="Username" type="text">
             <p>(This will be asked when you want to log in.)</p>
         </div>
         <div class="mb-4">
-            <input autocomplete="off" class="form-control mx-auto w-auto" id="email" name="email" placeholder="E-mail" type="email">
+            <input size="35" autocomplete="off" class="form-control form-control-lg mx-auto w-auto" id="email" name="email" placeholder="E-mail" type="email">
         </div>
         <div class="mb-4">
-            <input class="form-control mx-auto w-auto" name="password" placeholder="Password" type="password">
+            <input size="35" class="form-control form-control-lg mx-auto w-auto" name="password" placeholder="Password" type="password">
             <p>(Min 6, max 21 characters)</p>
         </div>
         <div class="mb-4">
-            <input class="form-control mx-auto w-auto" name="confirmpass" placeholder="Confirm Password" type="password">
+            <input size="35" class="form-control form-control-lg mx-auto w-auto" name="confirmpass" placeholder="Confirm Password" type="password">
         </div>
         <div class="mb-4">
             <select name="countries">
@@ -29,7 +29,7 @@
             </select>
         </div>
         <div class="mb-4">
-            <input autocomplete="off" class="form-control mx-auto w-auto" id="city" name="city" placeholder="City" type="text">
+            <input size="35" autocomplete="off" class="form-control form-control-lg mx-auto w-auto" id="city" name="city" placeholder="City" type="text">
         </div>
         <button class="btn btn-primary" type="submit">Register</button>
     </form>

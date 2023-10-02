@@ -29,7 +29,6 @@ html {
 
 a {
     text-decoration: none;
-    color: var(--text) !important;
 }
 ul, li {
     list-style: none;
@@ -37,6 +36,9 @@ ul, li {
 
 /* layout.html */
 
+nav h1 {
+    /*! color: black; */
+}
 body {
     background-color: var(--background);
     font-family: var(--texts);
@@ -48,7 +50,7 @@ h1, h2, h3, h4, h5, h6 {
     letter-spacing: 2pt;
 }
 .brand-name {
-    color: var(--accent);
+    /*! color: var(--accent); */
 }
 select {
     height: 2rem;
@@ -86,4 +88,10 @@ input[type="file"] {
 }
 .mp-deletep {
     margin-top: 5rem;
+}
+select:not(.form-select-md) {
+    width: 29rem;
+    padding-left: 1rem;
+    font-size: large;
+    height: 3rem;
 }

@@ -58,4 +58,4 @@ def greet_user():
         if db.execute("SELECT fname FROM users WHERE id = ?", session["user_id"])[0]["fname"] is None:
             return db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])[0]["username"]
         else:
-            return db.execute("SELECT fname FROM users WHERE id = ?", session["user_id"])[0]["name"].title()
+            return db.execute("SELECT fname FROM users WHERE id = ?", session["user_id"])[0]["fname"].title()

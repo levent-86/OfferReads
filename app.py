@@ -42,16 +42,15 @@ def register():
     user_country = request.form.get("countries")
     user_city = request.form.get("city")
     
-    # Query the all usernames in database
-    users = db.execute("SELECT username FROM users WHERE username = ?;", user_username)
-    emails = db.execute("SELECT email FROM users WHERE email = ?;", user_email)
+    # Query the all users in database
+    all_users = db.execute("SELECT * FROM users;")
 
     # INSERT the user's inputs in the database if request method is POST
     if request.method == "POST":
 
         # Ensure if username is already exists in the database
-        for i in range(len(users)):
-            if users[i]["username"] == user_username:
+        for i in range(len(all_users)):
+            if user_username in all_users[i]["username"]:
                 flash("The username you choose already exists.")
                 return redirect("/register")
 
@@ -71,8 +70,8 @@ def register():
             return redirect("/register")
         
         # Ensure if email is not already exists in the database
-        for i in range(len(emails)):
-            if emails[i]["email"] == user_email:
+        for i in range(len(all_users)):
+            if user_email in all_users[i]["email"]:
                 flash("The email you entered already exists.")
                 return redirect("/register")
         
@@ -110,7 +109,7 @@ def register():
         hashed_password = generate_password_hash(user_password, method='sha256', salt_length=16)
 
         # INSERT user's inputs in database
-        db.execute("INSERT INTO users (username, email, hash, country, city) VALUES (?, ?, ?, ? ,?);", user_username, user_email, hashed_password, user_country, user_city.lower())
+        db.execute("INSERT INTO users (username, email, hash, country, city) VALUES (?, ?, ?, ? ,?);", user_username, user_email, hashed_password, user_country.lower(), user_city.lower())
 
         # Flash the success
         flash("You have successfully registered! You are ready to log in.")
@@ -192,19 +191,107 @@ def exchange():
 @app.route("/myprofile", methods=["GET", "POST"])
 @login_required
 def myprofile():
-    # take user informations from data to variables
-    date = db.execute("SELECT date FROM users WHERE id = ?", session["user_id"])[0]["date"]
-    fname = db.execute("SELECT fname FROM users WHERE id = ?", session["user_id"])[0]["fname"]
-    lname = db.execute("SELECT lname FROM users WHERE id = ?", session["user_id"])[0]["lname"]
-    uname = db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])[0]["username"]
-    email = db.execute("SELECT email FROM users WHERE id = ?", session["user_id"])[0]["email"]
-    country = db.execute("SELECT country FROM users WHERE id = ?", session["user_id"])[0]["country"]
-    city = db.execute("SELECT city FROM users WHERE id = ?", session["user_id"])[0]["city"].title()
-    address = db.execute("SELECT address FROM users WHERE id = ?", session["user_id"])[0]["address"]
-    phone = db.execute("SELECT phone FROM users WHERE id = ?", session["user_id"])[0]["phone"]
+    # Collect user informations from database to variables
+    all_users = db.execute("SELECT * FROM users;")
+    database = db.execute("SELECT * FROM users WHERE id = ?;", session["user_id"])
+    date = db.execute("SELECT strftime('%Y,%m,%d', date) AS date FROM users WHERE id = ?;", session["user_id"])[0]["date"]
+    fname = database[0]["fname"]
+    lname = database[0]["lname"]
+    uname = database[0]["username"]
+    email = database[0]["email"]
+    password = database[0]["hash"]
+    country = database[0]["country"]
+    city = database[0]["city"]
+    address = database[0]["address"]
+    phone = database[0]["phone"]
 
     if request.method == "POST":
-        ...
-        # TODO
+        # Collect user's inputs in a variable
+        input_fname = request.form.get("fname")
+        input_lname = request.form.get("lname")
+        input_uname = request.form.get("username")
+        input_email = request.form.get("email")
+        input_password = request.form.get("password")
+        input_new_password = request.form.get("newpass")
+        input_confirm_password = request.form.get("confirmpass")
+        input_country = request.form.get("countries")
+        input_city = request.form.get("city")
+        input_address = request.form.get("address")
+        input_phone = request.form.get("phone")
+
+        # Update first name if input field not empty
+        if len(input_fname) > 0:
+            db.execute("UPDATE users SET fname = ? WHERE id = ?;", input_fname.lower(), session["user_id"])
+
+        # Update last name if input field not empty
+        if len(input_lname) > 0:
+            db.execute("UPDATE users SET lname = ? WHERE id = ?;", input_lname.lower(), session["user_id"])
+
+        # Ensure if username is already exists in the database and update if not exists
+        if len(input_uname) > 0:
+            for i in range(len(all_users)):
+                if input_uname in all_users[i]["username"]:
+                    flash("The username you choose already exists.")
+                    return redirect("/myprofile")
+                elif input_uname not in all_users[i]["username"]:
+                    db.execute("UPDATE users SET username = ? WHERE id = ?;", input_uname, session["user_id"])
+
+        # Ensure if email is already exists in the database and update if not exists
+        if len(input_email) > 0:
+            for i in range(len(all_users)):
+                if input_uname in all_users[i]["email"]:
+                    flash("The email you entered already exists.")
+                    return redirect("/myprofile")
+                elif input_email not in all_users[i]["email"]:
+                    db.execute("UPDATE users SET email = ? WHERE id = ?;", input_email, session["user_id"])
+        
+        # Save the new password if user inputs
+        if len(input_password) > 0:
+            # Ensure if user knows their own current password
+            if not check_password_hash(password, input_password):
+                flash("Invalid password.")
+                return redirect("/myprofile")
+            # Chack if new password is between 6-21 characters length
+            elif len(input_new_password) < 6 or len(input_new_password) > 21:
+                flash("The new password must be between 6 and 21 characters in length.")
+                return redirect("/myprofile")
+            # Chack if new password matches with confirmation
+            elif input_new_password != input_confirm_password:
+                flash("\"Your New Password\" and \"Confirm New Password\" fields didn't match.")
+                return redirect("/myprofile")
+            else:
+                hashed_password = generate_password_hash(input_password, method='sha256', salt_length=16)
+                db.execute("UPDATE users SET hash = ? WHERE id = ?;", hashed_password, session["user_id"])
+        
+
+        # Save the new country if user inputs
+        if input_country:
+        # Ensure if user choose the correct country
+            if input_country not in countries():
+                flash("Please choose a country in the list.")
+                return redirect("/myprofile")
+            else:
+                db.execute("UPDATE users SET country = ? WHERE id = ?;", input_country.lower(), session["user_id"])
+        
+
+        # Save the new city if user inputs
+        if len(input_city) > 0:
+            db.execute("UPDATE users SET city = ? WHERE id = ?;", input_city.lower(), session["user_id"])
+
+        
+        # Save the address if user inputs
+        if len(input_address) > 0:
+            db.execute("UPDATE users SET address = ? WHERE id = ?;", input_address.lower(), session["user_id"])
+        
+        
+        # Save the phone number if user inputs
+        if len(input_phone) > 0:
+            db.execute("UPDATE users SET phone = ? WHERE id = ?;", input_phone, session["user_id"])
+        
+
+        # Show success
+        flash("Your information(s) successfully updated.")
+        return redirect("/myprofile")
+
     else:
-        return render_template("myprofile.html", greet=greet_user(), date=date, fname=fname, lname=lname, username=uname, email=email, user_country=country, countries=countries(), city=city, address=address, phone=phone)
+        return render_template("myprofile.html", greet=greet_user(), date=date, fname=fname.title(), lname=lname.title(), username=uname, email=email, user_country=country.title(), countries=countries(), city=city.title(), address=address.title(), phone=phone)
