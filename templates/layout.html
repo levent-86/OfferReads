@@ -34,7 +34,7 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                                 <li><a class="dropdown-item" href="/myprofile">My Profile</a></li>
-                                <li><a class="dropdown-item" href="#">My Books</a></li>
+                                <li><a class="dropdown-item" href="/mybooks">My Books</a></li>
                                 <li><a class="dropdown-item" href="#">My Offers</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="/logout">Log Out</a></li>
@@ -43,12 +43,12 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-bell-fill"></i>
-                                <span class="badge bg-danger">{{ 0 }}</span>
+                                <span class="badge rounded-pill bg-danger">{{ 0 }}</span>
                             </a>
                             <ul class="dropdown-menu  dropdown-menu-end" aria-labelledby="navbarDropdown">
                                 <li>
                                     <a class="dropdown-item" href="#">
-                                        <span class="badge bg-danger">{{ 0 }}</span>
+                                        <span class="badge rounded-pill bg-danger">{{ 0 }}</span>
                                         <span class="dropdown-item-text">See all notifications</span>
                                     </a>
                                     <li><hr class="dropdown-divider"></li>
@@ -60,12 +60,12 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-envelope-fill"></i>
-                                <span class="badge bg-danger">{{ 0 }}</span>
+                                <span class="badge rounded-pill bg-danger">{{ 0 }}</span>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                                 <li>
                                     <a class="dropdown-item" href="#">
-                                        <span class="badge bg-danger">{{ 0 }}</span>
+                                        <span class="badge rounded-pill bg-danger">{{ 0 }}</span>
                                         <span class="dropdown-item-text">See all messages</span>
                                     </a>
                                     <li><hr class="dropdown-divider"></li>
@@ -88,7 +88,7 @@
 
     {% if get_flashed_messages() %}
       <header>
-          <div class="alert alert-info mb-0 text-center" role="alert">
+          <div class="alert alert-info text-center" role="alert">
                 {{ get_flashed_messages() | join(" ") }}
           </div>
       </header>

@@ -180,14 +180,6 @@ def logout():
 
 
 
-@app.route("/exchange")
-@login_required
-def exchange():
-    ...
-    # TODO
-
-
-
 @app.route("/myprofile", methods=["GET", "POST"])
 @login_required
 def myprofile():
@@ -294,4 +286,96 @@ def myprofile():
         return redirect("/myprofile")
 
     else:
-        return render_template("myprofile.html", greet=greet_user(), date=date, fname=fname.title(), lname=lname.title(), username=uname, email=email, user_country=country.title(), countries=countries(), city=city.title(), address=address.title(), phone=phone)
+        # Return string if there's no information in the database
+        if fname != None:
+            fname = fname.title()
+        if lname != None:
+            lname = lname.title()
+        if country != None:
+            country = country.title()
+        if city != None:
+            city = city.title()
+        if address != None:
+            address = address.title()
+        
+        """ delete_values = {
+            "fname": fname,
+            "lname": lname,
+            "address": address,
+            "phone": phone
+        }
+
+        delete_button_names = ["First Name", "Last Name", "City", "Address", "Phone"] """
+        
+        return render_template("myprofile.html", greet=greet_user(), date=date, fname=fname, lname=lname, username=uname, email=email, user_country=country, countries=countries(), city=city, address=address, phone=phone)
+
+
+
+@app.route("/delete", methods=["POST"])
+@login_required
+def delete_myprofile():
+    # Collect the data from myprofile.html
+    d_fname = request.form.get("fname")
+    d_lname = request.form.get("lname")
+    d_address = request.form.get("address")
+    d_phone = request.form.get("phone")
+
+    # Take the data from database
+    database = db.execute("SELECT * FROM users WHERE id = ?;", session["user_id"])
+    fname = database[0]["fname"]
+    lname = database[0]["lname"]
+    address = database[0]["address"]
+    phone = database[0]["phone"]
+
+    # Return string if there's no information in the database
+    """ if fname != None:
+        fname = fname.title()
+    if lname != None:
+        lname = lname.title()
+    if address != None:
+        address = address.title() """
+
+    if d_fname != None:
+        db.execute("UPDATE users SET fname = NULL WHERE id = ?;", session["user_id"])
+        flash("Your name successfully deleted.")
+        return redirect("/myprofile")
+    if d_lname != None:
+        db.execute("UPDATE users SET lname = NULL WHERE id = ?;", session["user_id"])
+        flash("Your last name successfully deleted.")
+        return redirect("/myprofile")
+    if d_address != None:
+        db.execute("UPDATE users SET address = NULL WHERE id = ?;", session["user_id"])
+        flash("Your address successfully deleted.")
+        return redirect("/myprofile")
+    if d_phone != None:
+        db.execute("UPDATE users SET phone = NULL WHERE id = ?;", session["user_id"])
+        flash("Your phone successfully deleted.")
+        return redirect("/myprofile")
+    else:
+        flash("Something went wrong. Please try again.")
+        return redirect("/myprofile")
+
+
+
+@app.route("/exchange", methods=["GET", "POST"])
+@login_required
+def exchange():
+    # Collect data from exchange.html
+    if request.method == "POST":
+        # TODO
+        flash("TODO")
+    else:
+        return render_template("exchange.html", greet=greet_user())
+
+
+
+@app.route("/mybooks", methods=["GET", "POST"])
+@login_required
+def mybooks():
+    # Show data from mybooks.html
+    if request.method == "POST":
+        # TODO
+        ...
+    else:
+        return render_template("mybooks.html", greet=greet_user())
+

@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Exchange
+{% endblock %}
+
+{% block main %}
+    <form action="/exchange" method="post">
+        <div class="mb-4">
+            <!-- https://stackoverflow.com/a/25825731 -->
+            <label for="profilepic" class="ex-label"><i class="bi bi-book-fill"></i></label>
+            <input type="file" name="profilepic" id="profilepic" class="form-control mx-auto w-auto mp-disabled">
+            <p>Add a picture of the book.</p>
+        </div>
+        <!-- TODO -->
+    </form>
+{% endblock %}

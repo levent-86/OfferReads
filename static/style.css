@@ -42,6 +42,7 @@ nav h1 {
 body {
     background-color: var(--background);
     font-family: var(--texts);
+    font-size: large;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -70,7 +71,7 @@ input[placeholder="Search"] {
 }
 
 /* My Profile */
-.bi-person-circle {
+.bi-person-circle, .bi-book-fill {
     color: darkgray;
     font-size: 5rem;
 }
@@ -94,4 +95,28 @@ select:not(.form-select-md) {
     padding-left: 1rem;
     font-size: large;
     height: 3rem;
+}
+.mp-nullable-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+.mp-nullable-container input {
+    position: relative;
+}
+.mp-nullable-container span {
+    position: absolute;
+    margin-left: -33rem;
+}
+
+/* Exchange part */
+.bi-book-fill::before {
+    width: 8rem;
+    height: 8rem;
+    border: 5px solid;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }

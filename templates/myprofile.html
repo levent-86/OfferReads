@@ -5,63 +5,97 @@
 {% endblock %}
 
 {% block main %}
-    <p>You are <a class="brand-name" href="/"><span class="mp-text"><span class="brand-name">Offer</span>Reads</span></a> member since {{ date }}</p>
-    <form action="/myprofile" method="post">
-        <div class="mb-4">
-            <!-- https://stackoverflow.com/a/25825731 -->
-            <label for="profilepic" class="mp-label"><i class="bi bi-person-circle"></i></label>
-            <input type="file" name="profilepic" id="profilepic" class="form-control mx-auto w-auto mp-disabled" disabled="disabled">
-        </div>
-        <div class="mb-4">
-            <input size="35" class="form-control form-control-lg mx-auto w-auto mp-disabled" id="fname" name="fname" placeholder="Name: {{ fname }}" type="text" disabled="disabled">
-        </div>
-        <div class="mb-4">
-            <input size="35" class="form-control form-control-lg mx-auto w-auto mp-disabled" id="lname" name="lname" placeholder="Last Name: {{ lname }}" type="text" disabled="disabled">
-        </div>
-        <div class="mb-4">
-            <input size="35" autocomplete="off" autofocus class="form-control form-control-lg mx-auto w-auto mp-disabled" id="username" name="username" placeholder="Username: {{ username }}" type="text" disabled="disabled">
-        </div>
-        <div class="mb-4">
-            <input size="35" autocomplete="off" class="form-control form-control-lg mx-auto w-auto mp-disabled" id="email" name="email" placeholder="Email: {{ email }}" type="email" disabled="disabled">
-        </div>
-        <div class="mb-4">
-            <input size="35" class="form-control form-control-lg mx-auto w-auto mp-disabled" name="password" placeholder="Your Old Password" type="password" disabled="disabled">
-        </div>
-        <div class="mb-4">
-            <input size="35" class="form-control form-control-lg mx-auto w-auto mp-disabled" name="newpass" placeholder="Your New Password" type="password" disabled="disabled">
-        </div>
-        <div class="mb-4">
-            <input size="35" class="form-control form-control-lg mx-auto w-auto mp-disabled" name="confirmpass" placeholder="Confirm New Password" type="password" disabled="disabled">
-        </div>
-        <div class="mb-4">
-            <select style="" class="mp-disabled" name="countries" disabled="disabled">
-                <option selected disabled hidden>{{ user_country }}</option>
-                {% for country in countries %}
-                    <option value="{{ country }}">{{ country }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="mb-4">
-            <input size="35" autocomplete="off" class="form-control form-control-lg mx-auto w-auto mp-disabled" id="city" name="city" placeholder="City: {{ city }}" type="text" disabled="disabled">
-        </div>
-        <div class="mb-4">
-            <input size="35" autocomplete="off" class="form-control form-control-lg mx-auto w-auto mp-disabled" id="address" name="address" placeholder="Addrerss: {{ address }}" type="text" disabled="disabled">
-        </div>
-        <div class="mb-4">
-            <input size="35" autocomplete="off" class="form-control form-control-lg mx-auto w-auto mp-disabled" id="phone" name="phone" placeholder="Phone: {{ phone }}" type="tel" disabled="disabled">
-        </div>
-        
-        <div class="mb-7">
-            <button type="button" class="btn btn-primary mp-show btn-lg">Edit My Profile</button>
-            <button type="submit" class="btn btn-primary mp-hidden btn-lg">APPLY CHANGES</button>
-        </div>
-        
-        <div class="mb-4">
-            <button type="submit" class="btn btn-danger mp-deletep btn-lg">DELETE YOUR ACCOUNT</button>
+    <p class="text-primary">You are <a class="brand-name" href="/"><span class="mp-text"><span class="brand-name">Offer</span>Reads</span></a> member since {{ date }}</p>
+    <div class="mb-5 p-5 border rounded border-primary-subtle container-md">
+        <form action="/myprofile" method="post">
+            <div class="mb-4">
+                <!-- https://stackoverflow.com/a/25825731 -->
+                <label for="profilepic" class="mp-label"><i class="bi bi-person-circle"></i></label>
+                <input type="file" name="profilepic" id="profilepic" class="form-control mx-auto w-auto mp-disabled" disabled="disabled">
+            </div>
+            <div class="mb-4 mp-nullable-container">
+                <input size="35" class="form-control form-control-lg mx-auto w-auto mp-disabled" id="fname" name="fname" placeholder="First Name: {{ fname }}" type="text" disabled="disabled"><span class="text-info">*</span>
+            </div>
+            <div class="mb-4 mp-nullable-container">
+                <input size="35" class="form-control form-control-lg mx-auto w-auto mp-disabled" id="lname" name="lname" placeholder="Last Name: {{ lname }}" type="text" disabled="disabled"><span class="text-info">*</span>
+            </div>
+            <div class="mb-4">
+                <input size="35" autocomplete="off" autofocus class="form-control form-control-lg mx-auto w-auto mp-disabled" id="username" name="username" placeholder="Username: {{ username }}" type="text" disabled="disabled">
+            </div>
+            <div class="mb-4">
+                <input size="35" autocomplete="off" class="form-control form-control-lg mx-auto w-auto mp-disabled" id="email" name="email" placeholder="Email: {{ email }}" type="email" disabled="disabled">
+            </div>
+            <div class="mb-4">
+                <input size="35" class="form-control form-control-lg mx-auto w-auto mp-disabled" name="password" placeholder="Your Old Password" type="password" disabled="disabled">
+            </div>
+            <div class="mb-4">
+                <input size="35" class="form-control form-control-lg mx-auto w-auto mp-disabled" name="newpass" placeholder="Your New Password" type="password" disabled="disabled">
+            </div>
+            <div class="mb-4">
+                <input size="35" class="form-control form-control-lg mx-auto w-auto mp-disabled" name="confirmpass" placeholder="Confirm New Password" type="password" disabled="disabled">
+            </div>
+            <div class="mb-4">
+                <select class="mp-disabled" name="countries" disabled="disabled">
+                    <option selected disabled hidden>{{ user_country }}</option>
+                    {% for country in countries %}
+                        <option value="{{ country }}">{{ country }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-4">
+                <input size="35" autocomplete="off" class="form-control form-control-lg mx-auto w-auto mp-disabled" id="city" name="city" placeholder="City: {{ city }}" type="text" disabled="disabled">
+            </div>
+            <div class="mb-4 mp-nullable-container">
+                <input size="35" autocomplete="off" class="form-control form-control-lg mx-auto w-auto mp-disabled" id="address" name="address" placeholder="Addrerss: {{ address }}" type="text" disabled="disabled"><span class="text-info">*</span>
+            </div>
+            <div class="mb-4 mp-nullable-container">
+                <input size="35" autocomplete="off" class="form-control form-control-lg mx-auto w-auto mp-disabled" id="phone" name="phone" placeholder="Phone: {{ phone }}" type="tel" disabled="disabled"><span class="text-info">*</span>
+            </div>
+
+            <div class="container-md p-1 border rounded border-info mb-5">
+                <p  class="text-info">* Please fill all (*) fields for auto address exchange upon offer acceptance with others.</p>
+            </div>
+            
+            <div class="mb-7">
+                <button type="button" class="btn btn-primary mp-show btn-lg mb-5">Edit My Profile</button>
+                <button type="submit" class="btn btn-primary mp-hidden btn-lg mb-5">APPLY CHANGES</button>
+            </div>
         </div>
     </form>
+    {% if fname != None or lname != None or address != None or phone != None %}
+        <div class="container-md p-5 border rounded border-warning-subtle mb-5">
+            {% if fname != None and lname != None and address != None and phone != None %}
+                <p  class="text-warning">If you delete any of this information, you will not be able to automatically exchange addresses with the offeror or the acceptor of your offer (You will need to contact the offeror or the acceptor yourself).</p>
+            {% else %}
+                <p  class="text-warning">You cannot automatically exchange addresses with the offeror or the acceptor because you have not filled out all the required fields above.</p>
+            {% endif %}
+            {% if fname != None %}
+                <form action="/delete" method="post">
+                    <input name="fname" value="{{ fname }}" hidden>
+                    <button type="submit" class="btn btn-warning mb-4 btn-lg">Delete Your First Name</button>
+                </form>
+            {% endif %}
+            {% if lname != None %}
+                <form action="/delete" method="post">
+                    <input name="lname" value="{{ lname }}" hidden>
+                    <button type="submit" class="btn btn-warning mb-4 btn-lg">Delete Your Last Name</button>
+                </form>
+            {% endif %}
+            {% if address != None %}
+                <form action="/delete" method="post">
+                    <input name="address" value="{{ address }}" hidden>
+                    <button type="submit" class="btn btn-warning mb-4 btn-lg">Delete Your Address</button>
+                </form>
+            {% endif %}
+            {% if phone != None %}
+                <form action="/delete" method="post">
+                    <input name="phone" value="{{ phone }}" hidden>
+                    <button type="submit" class="btn btn-warning mb-5 btn-lg">Delete Your Phone</button>
+                </form>
+            {% endif %}
+        </div>
+    {% endif %}
 {% endblock %}
 
-<!-- TODO add delete button each necessary field -->
 <!-- TODO configure DELETE YOUR ACCOUNT button -->
 <!-- TODO configure profile picture -->
