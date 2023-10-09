@@ -12,6 +12,20 @@
             <input type="file" name="profilepic" id="profilepic" class="form-control mx-auto w-auto mp-disabled">
             <p>Add a picture of the book.</p>
         </div>
-        <!-- TODO -->
+        <div class="mb-4">
+            <input type="text" name="bok_title" id="book_title" placeholder="Book Title">
+        </div>
+        <div class="mb-4">
+            <input type="text" name="bok_author" id="book_author" placeholder="Book Author">
+        </div>
+        <div class="mb-4">
+            <select name="conditions">
+                <option selected disabled hidden>Select Book Condition</option>
+                {% for condition in conditions %}
+                    <option value="{{ condition }}">{{ condition }}</option>
+                {% endfor %}
+            </select>
+            <p>Don't know what is this? <a href="https://en.wikipedia.org/wiki/List_of_used_book_conditions" target="_blank">Click here.</a></p>
+        </div>
     </form>
 {% endblock %}

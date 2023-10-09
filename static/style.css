@@ -70,16 +70,25 @@ input[placeholder="Search"] {
     margin: 0 1rem;
 }
 
+/* Register */
+.reg-select:not(.form-select-md), .mp-select:not(.form-select-md) {
+    width: 23rem;
+    padding-left: 1rem;
+    font-size: large;
+    height: 3rem;
+}
+
 /* My Profile */
+.profile-picture {
+    width: 15rem;
+    height: 15rem;
+    object-fit: cover;
+    cursor: pointer;
+}
 .bi-person-circle, .bi-book-fill {
     color: darkgray;
-    font-size: 5rem;
-}
-.mp-hidden {
-    display: none;
-}
-.myp-show {
-    display: block;
+    font-size: 15rem;
+    cursor: pointer;
 }
 input[type="file"] {
     display: none;
@@ -89,12 +98,6 @@ input[type="file"] {
 }
 .mp-deletep {
     margin-top: 5rem;
-}
-select:not(.form-select-md) {
-    width: 29rem;
-    padding-left: 1rem;
-    font-size: large;
-    height: 3rem;
 }
 .mp-nullable-container {
     display: flex;
@@ -119,4 +122,7 @@ select:not(.form-select-md) {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+.bi-book-fill {
+    cursor: pointer;
 }

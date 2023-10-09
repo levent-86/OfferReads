@@ -59,3 +59,20 @@ def greet_user():
             return db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])[0]["username"]
         else:
             return db.execute("SELECT fname FROM users WHERE id = ?", session["user_id"])[0]["fname"].title()
+
+
+
+
+# User's profile picture
+def profile_picture():
+    return db.execute("SELECT * FROM users WHERE id = ?;", session["user_id"])[0]["picture"]
+
+
+
+# Restrict the file formats to upload image
+# https://flask.palletsprojects.com/en/2.3.x/patterns/fileuploads/
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS

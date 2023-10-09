@@ -28,7 +28,10 @@
                         <a class="nav-link border border-3 border-success" href="/exchange">Exchange A Book</a>
                     </li>
                     {% if session["user_id"] %}
-                        <li class="nav-item dropdown">
+                        <li class="nav-item dropdown d-flex no-wrap">
+                            {% if picture != None %}
+                                <img src="../static/pictures/{{ session['user_id'] }}/pp/{{ picture }}" style="width: 3rem;" class="mini-profile-picture rounded-circle">
+                            {% endif %}
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 Hello, {{ greet }}
                             </a>
@@ -101,7 +104,5 @@
     <footer>
 
     </footer>
-
-    <script src="../static/script.js"></script>
 </body>
 </html>

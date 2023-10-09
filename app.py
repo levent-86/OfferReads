@@ -1,9 +1,12 @@
+import os
 from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
 
-from helpers import countries, login_required, login_not_required, greet_user
+from helpers import countries, login_required, login_not_required, greet_user, allowed_file, profile_picture
+
 
 # Configure application
 app = Flask(__name__)
@@ -26,6 +29,79 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 @app.route("/")
 def index():
     return render_template("index.html", greet=greet_user())
+
+
+
+@app.route("/login", methods=["GET", "POST"])
+@login_not_required
+def login():
+    # User log in
+
+    # Collect user's inputs
+    user_username = request.form.get("username")
+    user_password = request.form.get("password")
+
+    # Query the all usernames in database for username
+    users = db.execute("SELECT * FROM users WHERE username = ?;", user_username)
+
+    if request.method == "POST":
+
+        # Ensure if username field filled
+        if len(user_username) < 1:
+            flash("Please insert your username.")
+            return redirect("/login")
+
+        # Ensure if password field filled
+        if len(user_password) < 1:
+            flash("Please insert your password.")
+            return redirect("/login")
+
+        # Ensure username exists and password is correct
+        if len(users) < 1 or not check_password_hash(users[0]["hash"], user_password):
+            flash("The username and/or password you entered is incorrect.")
+            return redirect("/login")
+        
+        # Clear all users
+        session.clear()
+
+        # Remember which user has logged in
+        session["user_id"] = users[0]["id"]
+
+        # Create a directory for user's profile picture and books pictures if it's not exists
+        # https://docs.python.org/3/library/os.html
+        """ try:
+            os.makedirs(f"static/pictures/{session['user_id']}/pp")
+        except FileExistsError:
+            pass
+        try:
+            os.makedirs(f"static/pictures/{session['user_id']}/bp")
+        except FileExistsError:
+            pass """
+        if not os.path.exists(f"static/pictures/{session['user_id']}/bp"):
+            os.makedirs(f"static/pictures/{session['user_id']}/bp")
+        elif not os.path.exists(f"static/pictures/{session['user_id']}/pp"):
+            os.makedirs(f"static/pictures/{session['user_id']}/pp")
+
+        # Flash the success
+        flash("Successfully logged in.")
+
+        # Redirect user to home page
+        return redirect("/")
+
+    else:
+        return render_template("login.html")
+
+
+
+@app.route("/logout")
+def logout():
+    # User log out
+
+    # Clear all users
+    session.clear()
+
+    # Redirect user to index.html page
+    return redirect("/")
 
 
 
@@ -122,64 +198,6 @@ def register():
 
 
 
-@app.route("/login", methods=["GET", "POST"])
-@login_not_required
-def login():
-    # User log in
-
-    # Collect user's inputs
-    user_username = request.form.get("username")
-    user_password = request.form.get("password")
-
-    # Query the all usernames in database for username
-    users = db.execute("SELECT * FROM users WHERE username = ?;", user_username)
-
-    if request.method == "POST":
-
-        # Ensure if username field filled
-        if len(user_username) < 1:
-            flash("Please insert your username.")
-            return redirect("/login")
-
-        # Ensure if password field filled
-        if len(user_password) < 1:
-            flash("Please insert your password.")
-            return redirect("/login")
-
-        # Ensure username exists and password is correct
-        if len(users) < 1 or not check_password_hash(users[0]["hash"], user_password):
-            flash("The username and/or password you entered is incorrect.")
-            return redirect("/login")
-        
-        # Clear all users
-        session.clear()
-
-        # Remember which user has logged in
-        session["user_id"] = users[0]["id"]
-
-        # Flash the success
-        flash("Successfully logged in.")
-
-        # Redirect user to home page
-        return redirect("/")
-
-    else:
-        return render_template("login.html")
-
-
-
-@app.route("/logout")
-def logout():
-    # User log out
-
-    # Clear all users
-    session.clear()
-
-    # Redirect user to index.html page
-    return redirect("/")
-
-
-
 @app.route("/myprofile", methods=["GET", "POST"])
 @login_required
 def myprofile():
@@ -257,7 +275,7 @@ def myprofile():
         
 
         # Save the new country if user inputs
-        if input_country:
+        if input_country != country:
         # Ensure if user choose the correct country
             if input_country not in countries():
                 flash("Please choose a country in the list.")
@@ -298,16 +316,65 @@ def myprofile():
         if address != None:
             address = address.title()
         
-        """ delete_values = {
-            "fname": fname,
-            "lname": lname,
-            "address": address,
-            "phone": phone
-        }
-
-        delete_button_names = ["First Name", "Last Name", "City", "Address", "Phone"] """
-        
         return render_template("myprofile.html", greet=greet_user(), date=date, fname=fname, lname=lname, username=uname, email=email, user_country=country, countries=countries(), city=city, address=address, phone=phone)
+
+
+
+
+@app.route('/pp', methods=['GET', 'POST'])
+@login_required
+def upload_profile_picture():
+    
+    if request.method == 'POST':
+        
+        # Collect the image file to a variable
+        img = request.files['image']
+
+        # Collect the user's image from the database to a variable
+        data_img = db.execute("SELECT picture FROM users;")[0]["picture"]
+        
+        # Ensure if input is not empty
+        if img.filename == '':
+            flash("You didn't select your profile picture.")
+            return redirect("/myprofile")
+        
+        # Ensure if input file format is right
+        if allowed_file(img.filename) == False:
+            flash("Only .jpg, .jpeg, .png and .gif file formats allowed.")
+            return redirect("/myprofile")
+
+        # Save the image file only input requirements are satisfied
+        if img.filename != '' and allowed_file(img.filename) == True:
+
+            # Determine the image saving path
+            upload_path = f'{os.getcwd()}/static/pictures/{session["user_id"]}/pp'
+
+            # Rename the input image file
+            img.filename = f"1.{img.filename.rsplit('.', 1)[1].lower()}"
+
+            # Senitize the file name to save
+            secure = secure_filename(img.filename)
+
+            # Save image in directory and database if doesn't exists
+            if data_img == None:
+                img.save(os.path.join(upload_path, secure))
+                db.execute("UPDATE users SET picture = ? WHERE id = ?;", secure, session["user_id"])
+                flash("Your profile picture successfully added.")
+                return redirect("/myprofile")
+            
+            # Remove the previous image and save new image in directory and database
+            else:
+                os.remove(os.path.join(upload_path, data_img))
+                img.save(os.path.join(upload_path, secure))
+                db.execute("UPDATE users SET picture = ? WHERE id = ?;", secure, session["user_id"])
+                flash("Your profile picture successfully updated.")
+                return redirect("/myprofile")
+        
+        flash("Something went wrong. Please try again.")
+        return redirect("/myprofile")
+
+
+    return redirect("/myprofile")
 
 
 
@@ -319,21 +386,7 @@ def delete_myprofile():
     d_lname = request.form.get("lname")
     d_address = request.form.get("address")
     d_phone = request.form.get("phone")
-
-    # Take the data from database
-    database = db.execute("SELECT * FROM users WHERE id = ?;", session["user_id"])
-    fname = database[0]["fname"]
-    lname = database[0]["lname"]
-    address = database[0]["address"]
-    phone = database[0]["phone"]
-
-    # Return string if there's no information in the database
-    """ if fname != None:
-        fname = fname.title()
-    if lname != None:
-        lname = lname.title()
-    if address != None:
-        address = address.title() """
+    d_picture = db.execute("SELECT picture FROM users WHERE id = ?;", session["user_id"])[0]["picture"]
 
     if d_fname != None:
         db.execute("UPDATE users SET fname = NULL WHERE id = ?;", session["user_id"])
@@ -351,9 +404,17 @@ def delete_myprofile():
         db.execute("UPDATE users SET phone = NULL WHERE id = ?;", session["user_id"])
         flash("Your phone successfully deleted.")
         return redirect("/myprofile")
+    if d_picture != None:
+        # Determine the image saving path
+        path = f'{os.getcwd()}/static/pictures/{session["user_id"]}/pp/{d_picture}'
+        os.remove(path)
+        db.execute("UPDATE users SET picture = NULL WHERE id = ?;", session["user_id"])
+        flash("Your profile picture successfully deleted.")
+        return redirect("/myprofile")
     else:
         flash("Something went wrong. Please try again.")
         return redirect("/myprofile")
+
 
 
 

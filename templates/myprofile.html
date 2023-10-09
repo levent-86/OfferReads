@@ -6,68 +6,88 @@
 
 {% block main %}
     <p class="text-primary">You are <a class="brand-name" href="/"><span class="mp-text"><span class="brand-name">Offer</span>Reads</span></a> member since {{ date }}</p>
-    <div class="mb-5 p-5 border rounded border-primary-subtle container-md">
+    <div class="mb-5 mt-5 border rounded border-primary-subtle container-md d-inline-flex flex-sm-column flex-wrap justify-content-center">
+        <form action="/pp" method="post" enctype="multipart/form-data" class="d-inline-flex flex-sm-column flex-wrap justify-content-center align-items-center mt-5">
+            <label for="image" class="mp-label">
+                {% if picture == None %}
+                    <i class="bi bi-person-circle "></i>
+                {% else %}
+                    <img src="../static/pictures/{{ session['user_id'] }}/pp/{{ picture }}" class="profile-picture rounded-circle mt-5 mb-4" alt="Profile Picture">
+                {% endif %}
+            </label>
+            <input type="file" name="image" id="image" class="form-control mx-auto w-auto">
+            <button type="submit" class="btn btn-primary btn-lg mb-4" style="width: fit-content;">Upload Picture</button>
+        </form>
+        {% if picture != None %}
+            <form action="/delete" method="post">
+                <input name="picture" value="{{ picture }}" hidden>
+                <button type="submit" class="btn btn-primary mb-5 btn-lg" style="width: fit-content;">Delete Picture</button>
+            </form>
+        {% endif %}
         <form action="/myprofile" method="post">
             <div class="mb-4">
-                <!-- https://stackoverflow.com/a/25825731 -->
-                <label for="profilepic" class="mp-label"><i class="bi bi-person-circle"></i></label>
-                <input type="file" name="profilepic" id="profilepic" class="form-control mx-auto w-auto mp-disabled" disabled="disabled">
-            </div>
-            <div class="mb-4 mp-nullable-container">
-                <input size="35" class="form-control form-control-lg mx-auto w-auto mp-disabled" id="fname" name="fname" placeholder="First Name: {{ fname }}" type="text" disabled="disabled"><span class="text-info">*</span>
-            </div>
-            <div class="mb-4 mp-nullable-container">
-                <input size="35" class="form-control form-control-lg mx-auto w-auto mp-disabled" id="lname" name="lname" placeholder="Last Name: {{ lname }}" type="text" disabled="disabled"><span class="text-info">*</span>
+                <input size="35" class="form-control form-control-md mx-auto w-auto mp-disabled" id="fname" name="fname" placeholder="First Name: {{ fname }}" type="text">
             </div>
             <div class="mb-4">
-                <input size="35" autocomplete="off" autofocus class="form-control form-control-lg mx-auto w-auto mp-disabled" id="username" name="username" placeholder="Username: {{ username }}" type="text" disabled="disabled">
+                <input size="35" class="form-control form-control-md mx-auto w-auto mp-disabled" id="lname" name="lname" placeholder="Last Name: {{ lname }}" type="text">
             </div>
             <div class="mb-4">
-                <input size="35" autocomplete="off" class="form-control form-control-lg mx-auto w-auto mp-disabled" id="email" name="email" placeholder="Email: {{ email }}" type="email" disabled="disabled">
+                <input size="35" autocomplete="off" class="form-control form-control-md mx-auto w-auto mp-disabled" id="username" name="username" placeholder="Username: {{ username }}" type="text">
             </div>
             <div class="mb-4">
-                <input size="35" class="form-control form-control-lg mx-auto w-auto mp-disabled" name="password" placeholder="Your Old Password" type="password" disabled="disabled">
+                <input size="35" autocomplete="off" class="form-control form-control-md mx-auto w-auto mp-disabled" id="email" name="email" placeholder="Email: {{ email }}" type="email">
             </div>
             <div class="mb-4">
-                <input size="35" class="form-control form-control-lg mx-auto w-auto mp-disabled" name="newpass" placeholder="Your New Password" type="password" disabled="disabled">
+                <input size="35" class="form-control form-control-md mx-auto w-auto mp-disabled" name="password" placeholder="Your Old Password" type="password">
             </div>
             <div class="mb-4">
-                <input size="35" class="form-control form-control-lg mx-auto w-auto mp-disabled" name="confirmpass" placeholder="Confirm New Password" type="password" disabled="disabled">
+                <input size="35" class="form-control form-control-md mx-auto w-auto mp-disabled" name="newpass" placeholder="Your New Password" type="password">
             </div>
             <div class="mb-4">
-                <select class="mp-disabled" name="countries" disabled="disabled">
-                    <option selected disabled hidden>{{ user_country }}</option>
+                <input size="35" class="form-control form-control-md mx-auto w-auto mp-disabled" name="confirmpass" placeholder="Confirm New Password" type="password">
+            </div>
+            <div class="mb-4">
+                <select class="mp-disabled" name="countries">
+                    <option selected hidden>{{ user_country }}</option>
                     {% for country in countries %}
                         <option value="{{ country }}">{{ country }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="mb-4">
-                <input size="35" autocomplete="off" class="form-control form-control-lg mx-auto w-auto mp-disabled" id="city" name="city" placeholder="City: {{ city }}" type="text" disabled="disabled">
+                <input size="35" autocomplete="off" class="form-control form-control-md mx-auto w-auto mp-disabled" id="city" name="city" placeholder="City: {{ city }}" type="text">
             </div>
-            <div class="mb-4 mp-nullable-container">
-                <input size="35" autocomplete="off" class="form-control form-control-lg mx-auto w-auto mp-disabled" id="address" name="address" placeholder="Addrerss: {{ address }}" type="text" disabled="disabled"><span class="text-info">*</span>
+            <div class="mb-4">
+                <input size="35" autocomplete="off" class="form-control form-control-md mx-auto w-auto mp-disabled" id="address" name="address" placeholder="Addrerss: {{ address }}" type="text">
             </div>
-            <div class="mb-4 mp-nullable-container">
-                <input size="35" autocomplete="off" class="form-control form-control-lg mx-auto w-auto mp-disabled" id="phone" name="phone" placeholder="Phone: {{ phone }}" type="tel" disabled="disabled"><span class="text-info">*</span>
+            <div class="mb-4">
+                <input size="35" autocomplete="off" class="form-control form-control-md mx-auto w-auto mp-disabled" id="phone" name="phone" placeholder="Phone: {{ phone }}" type="tel">
             </div>
-
-            <div class="container-md p-1 border rounded border-info mb-5">
-                <p  class="text-info">* Please fill all (*) fields for auto address exchange upon offer acceptance with others.</p>
-            </div>
+            {% if fname == None or lname == None or address == None or phone == None %}
+                <div class="container-md border rounded border-info mb-5">
+                    <p  class="text-info">If you fill all (None) fields, you will instantly exchange contact information upon offer acceptance with others.</p>
+                </div>
+            {% else %}
+                <div class="container-md border rounded border-info mb-5">
+                    <p class="text-info">You're ready to instant book exchange with individuals.</p>
+                </div>
+            {% endif %}
             
             <div class="mb-7">
-                <button type="button" class="btn btn-primary mp-show btn-lg mb-5">Edit My Profile</button>
                 <button type="submit" class="btn btn-primary mp-hidden btn-lg mb-5">APPLY CHANGES</button>
             </div>
         </div>
     </form>
     {% if fname != None or lname != None or address != None or phone != None %}
-        <div class="container-md p-5 border rounded border-warning-subtle mb-5">
+        <div class="container-md border rounded border-warning-subtle mb-5">
             {% if fname != None and lname != None and address != None and phone != None %}
-                <p  class="text-warning">If you delete any of this information, you will not be able to automatically exchange addresses with the offeror or the acceptor of your offer (You will need to contact the offeror or the acceptor yourself).</p>
+                <div class="container-md border rounded border-warning mb-5 mt-5">
+                    <p  class="text-warning">If you delete any of this information, you will not be able to automatically exchange contact infromation with the offeror or the acceptor of your offer (You will need to contact the offeror or the acceptor yourself).</p>
+                </div>
             {% else %}
-                <p  class="text-warning">You cannot automatically exchange addresses with the offeror or the acceptor because you have not filled out all the required fields above.</p>
+                <div class="container-md border rounded border-warning mb-5 mt-5">
+                    <p  class="text-warning">You cannot automatically exchange contact information with the offeror or the acceptor because you have not filled out all the required fields above.</p>
+                </div>
             {% endif %}
             {% if fname != None %}
                 <form action="/delete" method="post">
