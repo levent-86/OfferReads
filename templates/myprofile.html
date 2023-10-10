@@ -10,12 +10,12 @@
         <form action="/pp" method="post" enctype="multipart/form-data" class="d-inline-flex flex-sm-column flex-wrap justify-content-center align-items-center mt-5">
             <label for="image" class="mp-label">
                 {% if picture == None %}
-                    <i class="bi bi-person-circle "></i>
+                    <img src="../static/person-circle.svg" class="thumb-picture profile-picture rounded-circle mt-5 mb-4 thumb-opacity" alt="Profile Picture">
                 {% else %}
-                    <img src="../static/pictures/{{ session['user_id'] }}/pp/{{ picture }}" class="profile-picture rounded-circle mt-5 mb-4" alt="Profile Picture">
+                    <img src="../static/pictures/{{ session['user_id'] }}/pp/{{ picture }}" class="thumb-picture profile-picture rounded-circle mt-5 mb-4" alt="Profile Picture">
                 {% endif %}
             </label>
-            <input type="file" name="image" id="image" class="form-control mx-auto w-auto">
+            <input type="file" name="image" id="image" class="form-control mx-auto w-auto thumb-input">
             <button type="submit" class="btn btn-primary btn-lg mb-4" style="width: fit-content;">Upload Picture</button>
         </form>
         {% if picture != None %}
@@ -65,7 +65,7 @@
             </div>
             {% if fname == None or lname == None or address == None or phone == None %}
                 <div class="container-md border rounded border-info mb-5">
-                    <p  class="text-info">If you fill all (None) fields, you will instantly exchange contact information upon offer acceptance with others.</p>
+                    <p  class="text-info">If you fill all "None" fields (except profile picture), you will instantly exchange contact information upon offer acceptance with others.</p>
                 </div>
             {% else %}
                 <div class="container-md border rounded border-info mb-5">

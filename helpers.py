@@ -71,7 +71,9 @@ def greet_user():
 def profile_picture():
     # Check if user logged in
     if session.get("user_id"):
-        return db.execute("SELECT * FROM users WHERE id = ?;", session["user_id"])[0]["picture"]
+        # Show the profile picture only if it's exists
+        if db.execute("SELECT picture FROM users WHERE id = ?", session["user_id"])[0]["picture"] != None:
+            return db.execute("SELECT * FROM users WHERE id = ?;", session["user_id"])[0]["picture"]
 
 
 

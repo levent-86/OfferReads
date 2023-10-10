@@ -306,74 +306,71 @@ def myprofile():
 
 
 
-@app.route('/pp', methods=['GET', 'POST'])
+@app.route('/pp', methods=['POST'])
 @login_required
 def upload_profile_picture():
+    # Save / remove user's profile picture in file system and database
+
+    # Collect the image file to a variable
+    img = request.files['image']
+
+    # Collect the user's image from the database to a variable
+    data_img = db.execute("SELECT picture FROM users WHERE id = ?;", session["user_id"])[0]["picture"]
     
-    if request.method == 'POST':
-        
-        # Collect the image file to a variable
-        img = request.files['image']
-
-        # Collect the user's image from the database to a variable
-        data_img = db.execute("SELECT picture FROM users WHERE id = ?;", session["user_id"])[0]["picture"]
-        
-        # Ensure if input is not empty
-        if img.filename == '':
-            flash("You didn't select your profile picture.")
-            return redirect("/myprofile")
-        
-        # Ensure if input file format is right
-        if allowed_file(img.filename) == False:
-            flash("Only .jpg, .jpeg, .png and .gif file formats allowed.")
-            return redirect("/myprofile")
-
-        # Save the image file only input requirements are satisfied
-        if img.filename != '' and allowed_file(img.filename) == True:
-
-            # Determine the image saving path
-            upload_path = f'{os.getcwd()}/static/pictures/{session["user_id"]}/pp'
-
-            # Rename the input image file
-            img.filename = f"user_pp.{img.filename.rsplit('.', 1)[1].lower()}"
-
-            # Senitize the file name to save
-            secure = secure_filename(img.filename)
-
-            # Save image in directory and database if doesn't exists
-            if data_img == None:
-                # Create a directory for user's profile picture
-                # https://docs.python.org/3/library/os.html
-                try:
-                    os.makedirs(f"static/pictures/{session['user_id']}/pp")
-                except FileExistsError:
-                    pass
-                try:
-                    os.makedirs(f"static/pictures/{session['user_id']}/bp")
-                except FileExistsError:
-                    pass
-                
-                # Save the image in directory
-                img.save(os.path.join(upload_path, secure))
-                # Update the database the new name of image
-                db.execute("UPDATE users SET picture = ? WHERE id = ?;", secure, session["user_id"])
-                # Flash the success and redirect to myprofile.html
-                flash("Your profile picture successfully added.")
-                return redirect("/myprofile")
-
-            # Remove the previous image and save new image in directory and database
-            else:
-                os.remove(os.path.join(upload_path, data_img))
-                img.save(os.path.join(upload_path, secure))
-                db.execute("UPDATE users SET picture = ? WHERE id = ?;", secure, session["user_id"])
-                flash("Your profile picture successfully updated.")
-                return redirect("/myprofile")
-        
-        flash("Something went wrong. Please try again.")
+    # Ensure if input is not empty
+    if img.filename == '':
+        flash("You didn't select your profile picture.")
+        return redirect("/myprofile")
+    
+    # Ensure if input file format is right
+    if allowed_file(img.filename) == False:
+        flash("Only .jpg, .jpeg, .png and .gif file formats allowed.")
         return redirect("/myprofile")
 
+    # Save the image file only input requirements are satisfied
+    if img.filename != '' and allowed_file(img.filename) == True:
 
+        # Determine the image saving path
+        upload_path = f'{os.getcwd()}/static/pictures/{session["user_id"]}/pp'
+
+        # Rename the input image file
+        img.filename = f"user_pp.{img.filename.rsplit('.', 1)[1].lower()}"
+
+        # Senitize the file name to save
+        secure = secure_filename(img.filename)
+
+        # Save image in directory and database if doesn't exists
+        if data_img == None:
+            # Create a directory for user's profile picture
+            # https://docs.python.org/3/library/os.html
+            try:
+                os.makedirs(f"static/pictures/{session['user_id']}/pp")
+            except FileExistsError:
+                pass
+            try:
+                os.makedirs(f"static/pictures/{session['user_id']}/bp")
+            except FileExistsError:
+                pass
+            
+            # Save the image in directory
+            img.save(os.path.join(upload_path, secure))
+            # Update the database the new name of image
+            db.execute("UPDATE users SET picture = ? WHERE id = ?;", secure, session["user_id"])
+            # Flash the success and redirect to myprofile.html
+            flash("Your profile picture successfully added.")
+            return redirect("/myprofile")
+
+        # Remove the previous image and save new image in directory and database
+        else:
+            os.remove(os.path.join(upload_path, data_img))
+            img.save(os.path.join(upload_path, secure))
+            db.execute("UPDATE users SET picture = ? WHERE id = ?;", secure, session["user_id"])
+            flash("Your profile picture successfully updated.")
+            return redirect("/myprofile")
+    
+    flash("Something went wrong. Please try again.")
     return redirect("/myprofile")
+
 
 
 
