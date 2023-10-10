@@ -28,7 +28,7 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 @app.route("/")
 def index():
-    return render_template("index.html", greet=greet_user())
+    return render_template("index.html", greet=greet_user(), picture=profile_picture())
 
 
 
@@ -66,21 +66,6 @@ def login():
 
         # Remember which user has logged in
         session["user_id"] = users[0]["id"]
-
-        # Create a directory for user's profile picture and books pictures if it's not exists
-        # https://docs.python.org/3/library/os.html
-        """ try:
-            os.makedirs(f"static/pictures/{session['user_id']}/pp")
-        except FileExistsError:
-            pass
-        try:
-            os.makedirs(f"static/pictures/{session['user_id']}/bp")
-        except FileExistsError:
-            pass """
-        if not os.path.exists(f"static/pictures/{session['user_id']}/bp"):
-            os.makedirs(f"static/pictures/{session['user_id']}/bp")
-        elif not os.path.exists(f"static/pictures/{session['user_id']}/pp"):
-            os.makedirs(f"static/pictures/{session['user_id']}/pp")
 
         # Flash the success
         flash("Successfully logged in.")
@@ -204,7 +189,7 @@ def myprofile():
     # Collect user informations from database to variables
     all_users = db.execute("SELECT * FROM users;")
     database = db.execute("SELECT * FROM users WHERE id = ?;", session["user_id"])
-    date = db.execute("SELECT strftime('%Y,%m,%d', date) AS date FROM users WHERE id = ?;", session["user_id"])[0]["date"]
+    date = db.execute("SELECT strftime('%m,%d, %Y', date) AS date FROM users WHERE id = ?;", session["user_id"])[0]["date"]
     fname = database[0]["fname"]
     lname = database[0]["lname"]
     uname = database[0]["username"]
@@ -316,7 +301,7 @@ def myprofile():
         if address != None:
             address = address.title()
         
-        return render_template("myprofile.html", greet=greet_user(), date=date, fname=fname, lname=lname, username=uname, email=email, user_country=country, countries=countries(), city=city, address=address, phone=phone)
+        return render_template("myprofile.html", greet=greet_user(), date=date, fname=fname, lname=lname, username=uname, email=email, user_country=country, countries=countries(), city=city, address=address, phone=phone, picture=profile_picture())
 
 
 
@@ -331,7 +316,7 @@ def upload_profile_picture():
         img = request.files['image']
 
         # Collect the user's image from the database to a variable
-        data_img = db.execute("SELECT picture FROM users;")[0]["picture"]
+        data_img = db.execute("SELECT picture FROM users WHERE id = ?;", session["user_id"])[0]["picture"]
         
         # Ensure if input is not empty
         if img.filename == '':
@@ -350,18 +335,32 @@ def upload_profile_picture():
             upload_path = f'{os.getcwd()}/static/pictures/{session["user_id"]}/pp'
 
             # Rename the input image file
-            img.filename = f"1.{img.filename.rsplit('.', 1)[1].lower()}"
+            img.filename = f"user_pp.{img.filename.rsplit('.', 1)[1].lower()}"
 
             # Senitize the file name to save
             secure = secure_filename(img.filename)
 
             # Save image in directory and database if doesn't exists
             if data_img == None:
+                # Create a directory for user's profile picture
+                # https://docs.python.org/3/library/os.html
+                try:
+                    os.makedirs(f"static/pictures/{session['user_id']}/pp")
+                except FileExistsError:
+                    pass
+                try:
+                    os.makedirs(f"static/pictures/{session['user_id']}/bp")
+                except FileExistsError:
+                    pass
+                
+                # Save the image in directory
                 img.save(os.path.join(upload_path, secure))
+                # Update the database the new name of image
                 db.execute("UPDATE users SET picture = ? WHERE id = ?;", secure, session["user_id"])
+                # Flash the success and redirect to myprofile.html
                 flash("Your profile picture successfully added.")
                 return redirect("/myprofile")
-            
+
             # Remove the previous image and save new image in directory and database
             else:
                 os.remove(os.path.join(upload_path, data_img))
@@ -417,6 +416,17 @@ def delete_myprofile():
 
 
 
+@app.route("/mybooks", methods=["GET", "POST"])
+@login_required
+def mybooks():
+    # Show data from mybooks.html
+    if request.method == "POST":
+        # TODO
+        ...
+    else:
+        return render_template("mybooks.html", greet=greet_user(), picture=profile_picture())
+
+
 
 @app.route("/exchange", methods=["GET", "POST"])
 @login_required
@@ -426,17 +436,5 @@ def exchange():
         # TODO
         flash("TODO")
     else:
-        return render_template("exchange.html", greet=greet_user())
-
-
-
-@app.route("/mybooks", methods=["GET", "POST"])
-@login_required
-def mybooks():
-    # Show data from mybooks.html
-    if request.method == "POST":
-        # TODO
-        ...
-    else:
-        return render_template("mybooks.html", greet=greet_user())
+        return render_template("exchange.html", greet=greet_user(), picture=profile_picture())
 

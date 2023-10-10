@@ -53,6 +53,11 @@ h1, h2, h3, h4, h5, h6 {
 .brand-name {
     /*! color: var(--accent); */
 }
+.mini-profile-picture {
+    width: 3rem;
+    height: 3rem;
+    object-fit: cover;
+}
 select {
     height: 2rem;
     border: none;

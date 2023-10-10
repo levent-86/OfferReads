@@ -16,6 +16,7 @@ def login_required(f):
     return decorated_function
 
 
+
 def login_not_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -53,8 +54,12 @@ def countries():
         ]
 
 
+
+# Greet the user on navbar with their name or username
 def greet_user():
+    # Check if user logged in
     if session.get("user_id"):
+        # If user inputs their name, use the name. Otherwise use their username.
         if db.execute("SELECT fname FROM users WHERE id = ?", session["user_id"])[0]["fname"] is None:
             return db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])[0]["username"]
         else:
@@ -62,10 +67,11 @@ def greet_user():
 
 
 
-
 # User's profile picture
 def profile_picture():
-    return db.execute("SELECT * FROM users WHERE id = ?;", session["user_id"])[0]["picture"]
+    # Check if user logged in
+    if session.get("user_id"):
+        return db.execute("SELECT * FROM users WHERE id = ?;", session["user_id"])[0]["picture"]
 
 
 
