@@ -336,10 +336,10 @@ def upload_profile_picture():
         # Rename the input image file
         img.filename = f"user_pp.{img.filename.rsplit('.', 1)[1].lower()}"
 
-        # Senitize the file name to save
+        # Sanitize the file name to save
         secure = secure_filename(img.filename)
 
-        # Save image in directory and database if doesn't exists
+        # Save image in directory and database if doesn't exists in database
         if data_img == None:
             # Create a directory for user's profile picture
             # https://docs.python.org/3/library/os.html
@@ -354,7 +354,7 @@ def upload_profile_picture():
             
             # Save the image in directory
             img.save(os.path.join(upload_path, secure))
-            # Update the database the new name of image
+            # Update the database with the new name of image
             db.execute("UPDATE users SET picture = ? WHERE id = ?;", secure, session["user_id"])
             # Flash the success and redirect to myprofile.html
             flash("Your profile picture successfully added.")
@@ -362,9 +362,13 @@ def upload_profile_picture():
 
         # Remove the previous image and save new image in directory and database
         else:
+            # Delete previous image if exists
             os.remove(os.path.join(upload_path, data_img))
+            # Save image in directory
             img.save(os.path.join(upload_path, secure))
+            # Update database
             db.execute("UPDATE users SET picture = ? WHERE id = ?;", secure, session["user_id"])
+            # Flash the success and redirect to myprofile.html
             flash("Your profile picture successfully updated.")
             return redirect("/myprofile")
     
@@ -377,6 +381,8 @@ def upload_profile_picture():
 @app.route("/delete", methods=["POST"])
 @login_required
 def delete_myprofile():
+    # Delete parts with buttons
+
     # Collect the data from myprofile.html
     d_fname = request.form.get("fname")
     d_lname = request.form.get("lname")
@@ -384,6 +390,7 @@ def delete_myprofile():
     d_phone = request.form.get("phone")
     d_picture = db.execute("SELECT picture FROM users WHERE id = ?;", session["user_id"])[0]["picture"]
 
+    # mprofile.html
     if d_fname != None:
         db.execute("UPDATE users SET fname = NULL WHERE id = ?;", session["user_id"])
         flash("Your name successfully deleted.")
@@ -401,7 +408,7 @@ def delete_myprofile():
         flash("Your phone successfully deleted.")
         return redirect("/myprofile")
     if d_picture != None:
-        # Determine the image saving path
+        # Determine the image path
         path = f'{os.getcwd()}/static/pictures/{session["user_id"]}/pp/{d_picture}'
         os.remove(path)
         db.execute("UPDATE users SET picture = NULL WHERE id = ?;", session["user_id"])
@@ -428,10 +435,20 @@ def mybooks():
 @app.route("/exchange", methods=["GET", "POST"])
 @login_required
 def exchange():
+    conditions = [
+        "As new",
+        "Fine",
+        "Very good",
+        "Good",
+        "Fair",
+        "Poor",
+        "Ex-library",
+        "Book club",
+        "Binding copy"
+        ]
     # Collect data from exchange.html
     if request.method == "POST":
-        # TODO
-        flash("TODO")
+        img = request.files.getlist("image")
+        return redirect("/exchange")
     else:
-        return render_template("exchange.html", greet=greet_user(), picture=profile_picture())
-
+        return render_template("exchange.html", greet=greet_user(), picture=profile_picture(), conditions=conditions)

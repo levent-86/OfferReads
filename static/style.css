@@ -90,7 +90,7 @@ input[placeholder="Search"] {
     object-fit: cover;
     cursor: pointer;
 }
-.thumb-opacity {
+.preview-opacity {
     opacity: .5;
 }
 .bi-book-fill {
@@ -103,9 +103,6 @@ input[type="file"] {
 }
 .mp-text {
     font-family: var(--headings);
-}
-.mp-deletep {
-    margin-top: 5rem;
 }
 .mp-nullable-container {
     display: flex;
@@ -133,4 +130,18 @@ input[type="file"] {
 }
 .bi-book-fill {
     cursor: pointer;
+}
+.book-picture {
+    width: 7rem;
+    height: 7rem;
+    object-fit: cover;
+    cursor: pointer;
+    margin: 0 .5rem;
+}
+.exc-form-control {
+    resize: both;
+    overflow-y:auto;
+    max-height: 15rem;
+    width: 20rem;
+    transition: all .3s ease-in;
 }

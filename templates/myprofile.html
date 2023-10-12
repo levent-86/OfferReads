@@ -8,14 +8,14 @@
     <p class="text-primary">You are <a class="brand-name" href="/"><span class="mp-text"><span class="brand-name">Offer</span>Reads</span></a> member since {{ date }}</p>
     <div class="mb-5 mt-5 border rounded border-primary-subtle container-md d-inline-flex flex-sm-column flex-wrap justify-content-center">
         <form action="/pp" method="post" enctype="multipart/form-data" class="d-inline-flex flex-sm-column flex-wrap justify-content-center align-items-center mt-5">
-            <label for="image" class="mp-label">
+            <label for="image">
                 {% if picture == None %}
-                    <img src="../static/person-circle.svg" class="thumb-picture profile-picture rounded-circle mt-5 mb-4 thumb-opacity" alt="Profile Picture">
+                    <img src="../static/person-circle.svg" class="preview-picture profile-picture rounded-circle mt-5 mb-4 preview-opacity" alt="Profile Picture">
                 {% else %}
-                    <img src="../static/pictures/{{ session['user_id'] }}/pp/{{ picture }}" class="thumb-picture profile-picture rounded-circle mt-5 mb-4" alt="Profile Picture">
+                    <img src="../static/pictures/{{ session['user_id'] }}/pp/{{ picture }}" class="preview-picture profile-picture rounded-circle mt-5 mb-4" alt="Profile Picture">
                 {% endif %}
             </label>
-            <input type="file" name="image" id="image" class="form-control mx-auto w-auto thumb-input">
+            <input type="file" name="image" id="image" class="form-control mx-auto w-auto preview-input">
             <button type="submit" class="btn btn-primary btn-lg mb-4" style="width: fit-content;">Upload Picture</button>
         </form>
         {% if picture != None %}
@@ -26,28 +26,28 @@
         {% endif %}
         <form action="/myprofile" method="post" class="mt-5">
             <div class="mb-4">
-                <input size="35" class="form-control form-control-md mx-auto w-auto mp-disabled" id="fname" name="fname" placeholder="First Name: {{ fname }}" type="text">
+                <input size="30" class="form-control form-control-md mx-auto w-auto" id="fname" name="fname" placeholder="First Name: {{ fname }}" type="text">
             </div>
             <div class="mb-4">
-                <input size="35" class="form-control form-control-md mx-auto w-auto mp-disabled" id="lname" name="lname" placeholder="Last Name: {{ lname }}" type="text">
+                <input size="30" class="form-control form-control-md mx-auto w-auto" id="lname" name="lname" placeholder="Last Name: {{ lname }}" type="text">
             </div>
             <div class="mb-4">
-                <input size="35" autocomplete="off" class="form-control form-control-md mx-auto w-auto mp-disabled" id="username" name="username" placeholder="Username: {{ username }}" type="text">
+                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="username" name="username" placeholder="Username: {{ username }}" type="text">
             </div>
             <div class="mb-4">
-                <input size="35" autocomplete="off" class="form-control form-control-md mx-auto w-auto mp-disabled" id="email" name="email" placeholder="Email: {{ email }}" type="email">
+                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="email" name="email" placeholder="Email: {{ email }}" type="email">
             </div>
             <div class="mb-4">
-                <input size="35" class="form-control form-control-md mx-auto w-auto mp-disabled" name="password" placeholder="Your Old Password" type="password">
+                <input size="30" class="form-control form-control-md mx-auto w-auto" name="password" placeholder="Your Old Password" type="password">
             </div>
             <div class="mb-4">
-                <input size="35" class="form-control form-control-md mx-auto w-auto mp-disabled" name="newpass" placeholder="Your New Password" type="password">
+                <input size="30" class="form-control form-control-md mx-auto w-auto" name="newpass" placeholder="Your New Password" type="password">
             </div>
             <div class="mb-4">
-                <input size="35" class="form-control form-control-md mx-auto w-auto mp-disabled" name="confirmpass" placeholder="Confirm New Password" type="password">
+                <input size="30" class="form-control form-control-md mx-auto w-auto" name="confirmpass" placeholder="Confirm New Password" type="password">
             </div>
             <div class="mb-4">
-                <select class="mp-disabled" name="countries">
+                <select name="countries" style="width: 20rem; padding-left: .5rem;">
                     <option selected hidden>{{ user_country }}</option>
                     {% for country in countries %}
                         <option value="{{ country }}">{{ country }}</option>
@@ -55,13 +55,13 @@
                 </select>
             </div>
             <div class="mb-4">
-                <input size="35" autocomplete="off" class="form-control form-control-md mx-auto w-auto mp-disabled" id="city" name="city" placeholder="City: {{ city }}" type="text">
+                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="city" name="city" placeholder="City: {{ city }}" type="text">
             </div>
             <div class="mb-4">
-                <input size="35" autocomplete="off" class="form-control form-control-md mx-auto w-auto mp-disabled" id="address" name="address" placeholder="Addrerss: {{ address }}" type="text">
+                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="address" name="address" placeholder="Addrerss: {{ address }}" type="text">
             </div>
             <div class="mb-4">
-                <input size="35" autocomplete="off" class="form-control form-control-md mx-auto w-auto mp-disabled" id="phone" name="phone" placeholder="Phone: {{ phone }}" type="tel">
+                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="phone" name="phone" placeholder="Phone: {{ phone }}" type="tel">
             </div>
             {% if fname == None or lname == None or address == None or phone == None %}
                 <div class="container-md border rounded border-info mb-5">
@@ -117,5 +117,8 @@
     {% endif %}
 {% endblock %}
 
+{% block script %}
+    <script src="../static/myprofile.js"></script>
+{% endblock %}
+
 <!-- TODO configure DELETE YOUR ACCOUNT button -->
-<!-- TODO configure profile picture -->

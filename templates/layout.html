@@ -30,9 +30,9 @@
                     {% if session["user_id"] %}
                         <li class="nav-item dropdown d-flex no-wrap">
                             {% if picture != None %}
-                                <img src="../static/pictures/{{ session['user_id'] }}/pp/{{ picture }}" class="thumb-picture mini-profile-picture rounded-circle">
+                                <img src="../static/pictures/{{ session['user_id'] }}/pp/{{ picture }}" class="preview-picture mini-profile-picture rounded-circle">
                             {% else %}
-                                <img src="../static/person-circle.svg" class="thumb-picture mini-profile-picture rounded-circle thumb-opacity">
+                                <img src="../static/person-circle.svg" class="preview-picture mini-profile-picture rounded-circle preview-opacity">
                             {% endif %}
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 Hello, {{ greet }}
@@ -106,6 +106,6 @@
     <footer>
 
     </footer>
-    <script src="/static/script.js"></script>
+    {% block script %}{% endblock %}
 </body>
 </html>

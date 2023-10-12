@@ -7,10 +7,10 @@
 {% block main %}
     <form action="/login" method="post">
         <div class="mb-4">
-            <input size="35" autocomplete="off" autofocus class="form-control form-control-md mx-auto w-auto" id="username" name="username" placeholder="Username" type="text">
+            <input size="30" autocomplete="off" autofocus class="form-control form-control-md mx-auto w-auto" id="username" name="username" placeholder="Username" type="text" required>
         </div>
         <div class="mb-4">
-            <input size="35" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="password" name="password" placeholder="Password" type="password">
+            <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="password" name="password" placeholder="Password" type="password" required>
         </div>
         <button class="btn btn-primary" type="submit">Log In</button>
     </form>
