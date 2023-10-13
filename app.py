@@ -336,21 +336,19 @@ def upload_profile_picture():
         # Rename the input image file
         img.filename = f"user_pp.{img.filename.rsplit('.', 1)[1].lower()}"
 
-        # Sanitize the file name to save
+        # Sanitize the file to save
         secure = secure_filename(img.filename)
 
         # Save image in directory and database if doesn't exists in database
         if data_img == None:
-            # Create a directory for user's profile picture
+            # Create a directory for user's profile picture if not exists
             # https://docs.python.org/3/library/os.html
-            try:
+            if os.path.exists(f"static/pictures/{session['user_id']}/pp") == False:
+                os.makedirs(f"static/pictures/{session['user_id']}/pp")
+            """ try:
                 os.makedirs(f"static/pictures/{session['user_id']}/pp")
             except FileExistsError:
-                pass
-            try:
-                os.makedirs(f"static/pictures/{session['user_id']}/bp")
-            except FileExistsError:
-                pass
+                pass """
             
             # Save the image in directory
             img.save(os.path.join(upload_path, secure))
@@ -390,27 +388,33 @@ def delete_myprofile():
     d_phone = request.form.get("phone")
     d_picture = db.execute("SELECT picture FROM users WHERE id = ?;", session["user_id"])[0]["picture"]
 
-    # mprofile.html
+    # Delete first name
     if d_fname != None:
         db.execute("UPDATE users SET fname = NULL WHERE id = ?;", session["user_id"])
         flash("Your name successfully deleted.")
         return redirect("/myprofile")
+    # Delete last name
     if d_lname != None:
         db.execute("UPDATE users SET lname = NULL WHERE id = ?;", session["user_id"])
         flash("Your last name successfully deleted.")
         return redirect("/myprofile")
+    # Delete address
     if d_address != None:
         db.execute("UPDATE users SET address = NULL WHERE id = ?;", session["user_id"])
         flash("Your address successfully deleted.")
         return redirect("/myprofile")
+    # Delete phone
     if d_phone != None:
         db.execute("UPDATE users SET phone = NULL WHERE id = ?;", session["user_id"])
         flash("Your phone successfully deleted.")
         return redirect("/myprofile")
+    # Delete profile picture
     if d_picture != None:
         # Determine the image path
         path = f'{os.getcwd()}/static/pictures/{session["user_id"]}/pp/{d_picture}'
+        # Remove image from directory
         os.remove(path)
+        # Remove image from database
         db.execute("UPDATE users SET picture = NULL WHERE id = ?;", session["user_id"])
         flash("Your profile picture successfully deleted.")
         return redirect("/myprofile")
@@ -435,6 +439,8 @@ def mybooks():
 @app.route("/exchange", methods=["GET", "POST"])
 @login_required
 def exchange():
+
+    # Take condition types in a variable
     conditions = [
         "As new",
         "Fine",
@@ -446,9 +452,79 @@ def exchange():
         "Book club",
         "Binding copy"
         ]
-    # Collect data from exchange.html
+    
     if request.method == "POST":
+
+        # Collect user's data from exchange.html template
         img = request.files.getlist("image")
-        return redirect("/exchange")
+        user_title = request.form.get("book_title")
+        user_author = request.form.get("book_author")
+        user_condition = request.form.get("conditions")
+        user_description = request.form.get("description")
+
+        # Ensure if user filled title field
+        if len(user_title) < 1:
+            flash("Please fill the \"Book Title\" field.")
+            return redirect("/exchange")
+        
+        # Ensure if user filled author field
+        if len(user_author) < 1:
+            flash("Please fill the \"Book Author\" field.")
+            return redirect("/exchange")
+        
+        # Ensure if user enters right condition
+        if user_condition != None and user_condition not in conditions:
+            flash("Invalid condition.")
+            return redirect("/exchange")
+
+        # Keep user description None instead of '' for jinja usage
+        if user_description == '':
+            user_description = None
+        
+        # Save book informations in database
+        db.execute("INSERT INTO books (user_id, title, author, condition, description) VALUES (?, ?, ?, ?, ?);", session["user_id"], user_title, user_author, user_condition, user_description)
+        
+        # Iterate over the input image(s)
+        for i in range(len(img)):
+            # Ensure if input file format is right
+            if img[i].filename != '' and allowed_file(img[i].filename) == False:
+                flash("Only .jpg, .jpeg, .png and .gif file formats allowed.")
+                return redirect("/exchange")
+            
+            # Save the image(s)
+            elif img[i].filename != '' and allowed_file(img[i].filename) == True:
+
+                # Save the latest image id number in the database
+                img_id = db.execute("SELECT id FROM images ORDER BY id DESC;")
+
+                # Create a directory for book images if not exists
+                # https://docs.python.org/3/library/os.html
+                if os.path.exists(f"static/pictures/{session['user_id']}/bp") == False:
+                    os.makedirs(f"static/pictures/{session['user_id']}/bp")
+                
+                # Determine the image saving path
+                upload_path = f'{os.getcwd()}/static/pictures/{session["user_id"]}/bp'
+
+                # Rename image(s) name(s)
+                if len(img_id) < 1:
+                    img[i].filename = f"1.{img[i].filename.rsplit('.', 1)[1].lower()}"
+                else:
+                    img[i].filename = f'{img_id[0]["id"] + 1}.{img[i].filename.rsplit(".", 1)[1].lower()}'
+
+                # Sanitize the file to save
+                secure = secure_filename(img[i].filename)
+
+                # Select user's latest book id
+                book_id = db.execute("SELECT id FROM books WHERE user_id = ? AND title = ? AND author = ? ORDER BY id DESC;", session["user_id"], user_title, user_author)[0]["id"]
+                
+
+                # Save the image in directory
+                img[i].save(os.path.join(upload_path, secure))
+                # Save the image in database
+                db.execute("INSERT INTO images (user_id, book_id, image) VALUES (?, ?, ?);", session["user_id"], book_id, secure)
+
+        # Flash the success and redirect to mybooks.html
+        flash("Your book ready to exchange.")
+        return redirect("/mybooks")
     else:
         return render_template("exchange.html", greet=greet_user(), picture=profile_picture(), conditions=conditions)
