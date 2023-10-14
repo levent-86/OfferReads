@@ -429,10 +429,51 @@ def delete_myprofile():
 def mybooks():
     # Show data from mybooks.html
     if request.method == "POST":
-        # TODO
-        ...
+
+        # Collect book's id from template
+        book_id = request.form.get("book")
+        # Query all the user's books
+        all_books = db.execute("SELECT id FROM books WHERE user_id = ?;", session["user_id"])
+
+        # Iterate over all the books
+        for i in range(len(all_books)):
+            #  Ensure if the book wanted to be deleted is in the database
+            if all_books[i]["id"] == int(book_id):
+                # Choose the specific book's images
+                book_img = db.execute("SELECT image FROM images WHERE user_id = ? AND book_id = ?", session["user_id"], book_id)
+                for j in range(len(book_img)):
+                    # Determine the directory of book
+                    book_path = f'{os.getcwd()}/static/pictures/{session["user_id"]}/bp/{book_img[j]["image"]}'
+                    # Delete book images from directory
+                    os.remove(book_path)
+                    # Delete book images from database
+                    db.execute("DELETE FROM images WHERE user_id = ? AND image  = ?;", session["user_id"], book_img[j]["image"])
+                
+                # Delete the book in books table
+                db.execute("DELETE FROM books WHERE user_id = ? AND id = ?;", session["user_id"], book_id)
+                
+                # Flash the success and redirect to mybooks.html
+                flash("Book deleted successfully.")
+                return redirect("/mybooks")
+        
+        # Show error to user in any misuse
+        flash("Something went wrong. Please try again to delete your book.")
+        return redirect("/mybooks")
+
     else:
-        return render_template("mybooks.html", greet=greet_user(), picture=profile_picture())
+        books = []
+        user_books = db.execute("SELECT * FROM books WHERE user_id = ?", session["user_id"])
+        for i in range(len(user_books)):
+            book_data = db.execute("SELECT id, title, author, condition, strftime('%m/%d/%Y %H:%M', date) AS date FROM books WHERE user_id = ?;", session["user_id"])[i]
+
+            if db.execute("SELECT image FROM images WHERE user_id = ? AND book_id = ?;", session["user_id"], book_data["id"]) != []:
+                images = db.execute("SELECT image FROM images WHERE user_id = ? AND book_id = ?;", session["user_id"], book_data["id"])[0]
+            else:
+                images = {'image': None}
+
+            book_data.update(images)
+            books.append(dict(book_data))
+        return render_template("mybooks.html", greet=greet_user(), picture=profile_picture(), book_data=books)
 
 
 
@@ -457,10 +498,16 @@ def exchange():
 
         # Collect user's data from exchange.html template
         img = request.files.getlist("image")
-        user_title = request.form.get("book_title")
-        user_author = request.form.get("book_author")
+        user_title = request.form.get("book_title").lower()
+        user_author = request.form.get("book_author").lower()
         user_condition = request.form.get("conditions")
         user_description = request.form.get("description")
+
+        # Lowercase the user inputs if not None
+        if user_condition != None:
+            user_condition.lower()
+        if user_description != None:
+            user_description.lower()
 
         # Ensure if user filled title field
         if len(user_title) < 1:
