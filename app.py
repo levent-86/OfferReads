@@ -1,6 +1,6 @@
 import os
 from cs50 import SQL
-from flask import Flask, flash, redirect, render_template, request, session
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -26,9 +26,51 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index():
-    return render_template("index.html", greet=greet_user(), picture=profile_picture())
+    # Show all books, search
+    
+
+    if request.method == "POST":
+        # Search button
+        ...
+
+    # Redirect to clicked book or user / show all books
+    else:
+        # Query all available books
+        all_books = db.execute("SELECT (users.id) AS userid, username, (books.id) AS bookid, title, author, condition, image, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books JOIN users ON books.user_id = users.id INNER JOIN images ON books.id = images.book_id WHERE is_offered = 0 AND is_available = 1 GROUP BY books.id, images.book_id;")
+
+        return render_template("index.html", greet=greet_user(), picture=profile_picture(), all_books=all_books)
+
+
+
+# https://flask.palletsprojects.com/en/3.0.x/quickstart/#url-building
+@app.route("/book/<int:books_id><string:books_name>", methods=["GET", "POST"])
+@login_required
+def book(books_id, books_name):
+    if request.method == "POST":
+        # Book offering inputs
+        ...
+    else:
+        # Show user informations
+        user_details = db.execute("SELECT (users.id) AS userid, country, city, username, picture, strftime('%m/%d/%Y %H:%M', users.date) AS date from users JOIN books ON users.id = books.user_id WHERE books.id = ?", books_id)
+
+        # Show book details
+        book_details = db.execute("SELECT books.user_id, (books.id) AS bookid, title, author, condition, description, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books JOIN users ON books.user_id = users.id WHERE books.id = ?", books_id)
+        book_images = db.execute("SELECT image FROM images WHERE book_id = ?", books_id)
+
+        bune = db.execute("SELECT image FROM images WHERE id = 1")
+        
+        
+        return render_template("book.html", greet=greet_user(), picture=profile_picture(), books_name=books_name.title(), author=book_details[0]["author"].title(), condition=book_details[0]["condition"], description=book_details[0]["description"], user_id=user_details[0]["userid"], profile_picture=user_details[0]["picture"], username=user_details[0]["username"], country=user_details[0]["country"].title(), city=user_details[0]["city"].title(), date=user_details[0]["date"], book_images=book_images, book_date=book_details[0]["date"])
+
+
+
+@app.route("/user/<username>")
+@login_required
+def user(username):
+    # Book display and offer button
+    return render_template("user.html", greet=greet_user(), picture=profile_picture())
 
 
 
@@ -461,16 +503,26 @@ def mybooks():
         return redirect("/mybooks")
 
     else:
+        # Create an empty list to make it a list of dict
         books = []
-        user_books = db.execute("SELECT * FROM books WHERE user_id = ?", session["user_id"])
-        for i in range(len(user_books)):
-            book_data = db.execute("SELECT id, title, author, condition, strftime('%m/%d/%Y %H:%M', date) AS date FROM books WHERE user_id = ?;", session["user_id"])[i]
 
-            if db.execute("SELECT image FROM images WHERE user_id = ? AND book_id = ?;", session["user_id"], book_data["id"]) != []:
-                images = db.execute("SELECT image FROM images WHERE user_id = ? AND book_id = ?;", session["user_id"], book_data["id"])[0]
+        # Query for user's books
+        user_books = db.execute("SELECT * FROM books WHERE user_id = ?", session["user_id"])
+
+        # Iterate over all user's books
+        for i in range(len(user_books)):
+            # Collect user's book data
+            book_data = db.execute("SELECT id, title, author, condition, strftime('%m/%d/%Y %H:%M', date) AS date FROM books WHERE user_id = ?;", session["user_id"])[i]
+            # Collect user's image data
+            image_data = db.execute("SELECT image FROM images WHERE user_id = ? AND book_id = ?;", session["user_id"], book_data["id"])
+
+            # save as None if there's no any image
+            if len(image_data) > 0:
+                images = image_data[0]
             else:
                 images = {'image': None}
 
+            # Save all informations in book list
             book_data.update(images)
             books.append(dict(book_data))
         return render_template("mybooks.html", greet=greet_user(), picture=profile_picture(), book_data=books)
@@ -533,8 +585,16 @@ def exchange():
         
         # Iterate over the input image(s)
         for i in range(len(img)):
+
+            # Save as an empty log if user not input an image
+            if img[i].filename == '':
+                empty_book_id = db.execute("SELECT id FROM books WHERE user_id = ? AND title = ? AND author = ? ORDER BY id DESC;", session["user_id"], user_title, user_author)[0]["id"]
+                db.execute("INSERT INTO images (user_id, book_id) VALUES (?, ?);", session["user_id"], empty_book_id)
+                flash("Your book ready to exchange.")
+                return redirect("/mybooks")
+        
             # Ensure if input file format is right
-            if img[i].filename != '' and allowed_file(img[i].filename) == False:
+            elif img[i].filename != '' and allowed_file(img[i].filename) == False:
                 flash("Only .jpg, .jpeg, .png and .gif file formats allowed.")
                 return redirect("/exchange")
             

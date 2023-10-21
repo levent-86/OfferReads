@@ -5,20 +5,50 @@
 {% endblock %}
 
 {% block main %}
-    <select name="search" class="form-select-md bg-secondary">
-        <option disabled selected hidden>Search by</option>
-        <option value="author">Author</option>
-        <option value="title">Title</option>
-    </select>
-    <input autocomplete="off" autofocus placeholder="Search" type="text" class="form-control-sm">
-    <datalist id="datalistoptions">
-        <option value="{{ title }}">
-        <option value="{{ author }}">
-    </datalist>
-    <button type="submit" class="btn btn-success">Search</button>
+    <!-- Search part -->
+    <div class="input-group mb-5 container-md">
+        <select name="search" class="form-select" style="max-width: 9rem; height: auto;">
+            <option disabled selected hidden>Search by</option>
+            <option value="author">Author</option>
+            <option value="title">Title</option>
+        </select>
+        <input type="search" class="form-control" placeholder="search" aria-label="search" aria-describedby="button-addon2">
+        <datalist id="datalistoptions">
+            <option value="{{ title }}">
+        </datalist>
+        <button class="btn btn-primary" type="button" id="button-addon2"><i class="bi bi-search"></i> Search</button>
+    </div>
 
-    <p>TODO</p>
+    <!-- List of cards part -->
+    <div class="d-flex flex-row flex-wrap justify-content-around align-items-center">
+        {% if all_books != None %}
+            {% for i in all_books %}
+                <div class="card-deck mt-5">
+                    <div class="card mb-4" style="width: 18rem; height: 36rem;" >
+                        {% if i["image"] != None %}
+                            <a href="{{ url_for('book', books_id=i.bookid, books_name=i.title) }}"><img class="card-img-top" src="../static/pictures/{{ i.userid }}/bp/{{ i['image'] }}" alt="Card image" style="height: 18rem; width: 18rem; object-fit: cover;"></a>
+                        {% else %}
+                            <a href="{{ url_for('book', books_id=i.bookid, books_name=i.title) }}"><img class="card-img-top" src="../static/book-circle.svg" alt="Card image" style="height: 18rem; width: 18rem; object-fit: cover; opacity: .5;"></a>
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ i["title"].title() }}</h5>
+                            <p class="card-text">{{ i["author"].title() }}</p>
+                            {% if i["condition"] != None %}
+                                <p class="card-text">Condition: {{ i["condition"].title() }}</p>
+                            {% endif %}
+                            <a href="#"><p class="card-text">{{ i["username"] }}</p></a>
+                        </div>
+                        <div class="card-footer">
+                            <small class="text-muted">{{ i["date"] }}</small>
+                        </div>
+                    </div>
+                </div>
+        {% else %}
+                <p>There is no book here.</p>
+            {% endfor %}
+        {% endif %}
+    </div>
 {% endblock %}
 
 <!-- TODO: -->
-<!-- add for loop to option value (l-15,16) -->
+<!-- add for loop to option value (l-17) -->

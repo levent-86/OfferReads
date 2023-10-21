@@ -145,3 +145,39 @@ input[type="file"] {
     width: 20rem;
     transition: all .3s ease-in;
 }
+
+/* Book part */
+/* Pictures */
+.image-close {
+    display: none;
+}
+.image-open {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+    justify-self: center;
+    align-self: center;
+    animation-name: modalimg;
+    animation-duration: .5s;
+}
+.book-modal {
+    cursor: zoom-out;
+    background-color: rgba(0, 0, 0, 0.9);
+}
+.img-fluid {
+    animation-name: modalbg;
+    animation-duration: .5s;
+}
+@keyframes modalimg {
+    0% {opacity: 0;}
+    100% {opacity: 1;}
+}
+@keyframes modalbg {
+    0% {background-color: rgba(0, 0, 0, 0);}
+    100% {background-color: rgba(0, 0, 0, 0.9);}
+}
+/* Offer inputs */
