@@ -11,6 +11,9 @@ from helpers import countries, login_required, login_not_required, greet_user, a
 # Configure application
 app = Flask(__name__)
 
+# Set a secret key
+app.secret_key = "justrandombyteshere"
+
 # Use sqlite database with cs50
 db = SQL("sqlite:///exchange.db")
 
@@ -29,7 +32,6 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 @app.route("/", methods=["GET", "POST"])
 def index():
     # Show all books, search
-    
 
     if request.method == "POST":
         # Search button
@@ -48,21 +50,123 @@ def index():
 @app.route("/book/<int:books_id><string:books_name>", methods=["GET", "POST"])
 @login_required
 def book(books_id, books_name):
+
+    # Show book details
+    book_details = db.execute("SELECT books.user_id, (books.id) AS bookid, title, author, condition, description, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books JOIN users ON books.user_id = users.id WHERE books.id = ?", books_id)
+
+    conditions = [
+        "As new",
+        "Fine",
+        "Very good",
+        "Good",
+        "Fair",
+        "Poor",
+        "Ex-library",
+        "Book club",
+        "Binding copy"
+        ]
+    
     if request.method == "POST":
         # Book offering inputs
-        ...
+        # Collect user's data from exchange.html template
+        img = request.files.getlist("image")
+        user_title = request.form.get("book_title").lower()
+        user_author = request.form.get("book_author").lower()
+        user_condition = request.form.get("conditions")
+        user_description = request.form.get("description")
+
+        # Lowercase the user inputs if not None
+        if user_condition != None:
+            user_condition.lower()
+        if user_description != None:
+            user_description.lower()
+
+        # Ensure if user filled title field
+        if not user_title:
+            flash("Please fill the \"Book Title\" field.")
+            return redirect(f"/book/{books_id}{books_name}")
+        
+        # Ensure if user filled author field
+        if not user_author:
+            flash("Please fill the \"Book Author\" field.")
+            return redirect(f"/book/{books_id}{books_name}")
+        
+        # Ensure if user enters right condition
+        if user_condition != None and user_condition not in conditions:
+            flash("Invalid condition.")
+            return redirect(f"/book/{books_id}{books_name}")
+
+        # Keep user description None instead of '' for jinja usage
+        if user_description == '':
+            user_description = None
+
+        # Insert book informations to database's books table as offer
+        db.execute("INSERT INTO books (user_id, title, author, condition, description, is_offered) VALUES (?, ?, ?, ?, ?, ?);", session["user_id"], user_title, user_author, user_condition, user_description, 1)
+
+        # Insert offer informations to database's offers table
+        offerer_book = db.execute("SELECT id FROM books WHERE user_id = ? AND is_offered = ? ORDER BY id DESC;", session["user_id"], 1)[0]["id"]
+        receiver = db.execute("SELECT user_id FROM books WHERE id = ?;", books_id)[0]["user_id"]
+        db.execute("INSERT INTO offers (offerer, offerer_book, receiver, receiver_book) VALUES (?, ?, ?, ?);", session["user_id"], offerer_book, receiver, books_id)
+
+        
+        # Iterate over the input image(s)
+        for i in range(len(img)):
+
+            # Save as an empty log if user not input an image
+            if img[i].filename == '':
+                empty_book_id = db.execute("SELECT id FROM books WHERE id = ?;", offerer_book)[0]["id"]
+                db.execute("INSERT INTO images (user_id, book_id) VALUES (?, ?);", session["user_id"], empty_book_id)
+                flash(f"You're successfully offered {user_title.title()} book for {book_details[0]['title'].title()}. You can offer more than one book!")
+                return redirect(f"/book/{books_id}{books_name}")
+        
+            # Ensure if input file format is right
+            elif img[i].filename != '' and allowed_file(img[i].filename) == False:
+                flash("Only .jpg, .jpeg, .png and .gif file formats allowed.")
+                return redirect(f"/book/{books_id}{books_name}")
+            
+            # Save the image(s)
+            elif img[i].filename != '' and allowed_file(img[i].filename) == True:
+
+                # Save the latest image id number in a variable
+                img_id = db.execute("SELECT id FROM images ORDER BY id DESC;")
+
+                # Create a directory for book images if not exists
+                if os.path.exists(f"static/pictures/{session['user_id']}/bp") == False:
+                    os.makedirs(f"static/pictures/{session['user_id']}/bp")
+                
+                # Determine the image saving path
+                upload_path = f'{os.getcwd()}/static/pictures/{session["user_id"]}/bp'
+
+                # Rename image(s) name(s)
+                if len(img_id) < 1:
+                    img[i].filename = f"1.{img[i].filename.rsplit('.', 1)[1].lower()}"
+                else:
+                    img[i].filename = f'{img_id[0]["id"] + 1}.{img[i].filename.rsplit(".", 1)[1].lower()}'
+
+                # Sanitize the file to save
+                secure = secure_filename(img[i].filename)
+
+                # Select user's latest book id
+                book_id = db.execute("SELECT id FROM books WHERE user_id = ? AND title = ? AND author = ? AND is_offered = ? ORDER BY id DESC;", session["user_id"], user_title, user_author, 1)[0]["id"]
+                
+
+                # Save the image in directory
+                img[i].save(os.path.join(upload_path, secure))
+                # Save the image in database
+                db.execute("INSERT INTO images (user_id, book_id, image) VALUES (?, ?, ?);", session["user_id"], book_id, secure)
+            
+        # Flash the success and redirect to book.html
+        flash(f"You're successfully offered {user_title.title()} book for {book_details[0]['title'].title()}. You can offer more than one book!")
+        return redirect(f"/book/{books_id}{books_name}")
     else:
         # Show user informations
         user_details = db.execute("SELECT (users.id) AS userid, country, city, username, picture, strftime('%m/%d/%Y %H:%M', users.date) AS date from users JOIN books ON users.id = books.user_id WHERE books.id = ?", books_id)
 
-        # Show book details
-        book_details = db.execute("SELECT books.user_id, (books.id) AS bookid, title, author, condition, description, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books JOIN users ON books.user_id = users.id WHERE books.id = ?", books_id)
+        # Show book images
         book_images = db.execute("SELECT image FROM images WHERE book_id = ?", books_id)
-
-        bune = db.execute("SELECT image FROM images WHERE id = 1")
         
         
-        return render_template("book.html", greet=greet_user(), picture=profile_picture(), books_name=books_name.title(), author=book_details[0]["author"].title(), condition=book_details[0]["condition"], description=book_details[0]["description"], user_id=user_details[0]["userid"], profile_picture=user_details[0]["picture"], username=user_details[0]["username"], country=user_details[0]["country"].title(), city=user_details[0]["city"].title(), date=user_details[0]["date"], book_images=book_images, book_date=book_details[0]["date"])
+        return render_template("book.html", greet=greet_user(), picture=profile_picture(), books_id=books_id, books_name=books_name, book_titles=book_details[0]["title"].title(), conditions=conditions, author=book_details[0]["author"].title(), condition=book_details[0]["condition"], description=book_details[0]["description"], user_id=user_details[0]["userid"], profile_picture=user_details[0]["picture"], username=user_details[0]["username"], country=user_details[0]["country"].title(), city=user_details[0]["city"].title(), date=user_details[0]["date"], book_images=book_images, book_date=book_details[0]["date"])
 
 
 
@@ -89,17 +193,17 @@ def login():
     if request.method == "POST":
 
         # Ensure if username field filled
-        if len(user_username) < 1:
+        if not user_username:
             flash("Please insert your username.")
             return redirect("/login")
 
         # Ensure if password field filled
-        if len(user_password) < 1:
+        if not user_password:
             flash("Please insert your password.")
             return redirect("/login")
 
         # Ensure username exists and password is correct
-        if len(users) < 1 or not check_password_hash(users[0]["hash"], user_password):
+        if not users or not check_password_hash(users[0]["hash"], user_password):
             flash("The username and/or password you entered is incorrect.")
             return redirect("/login")
         
@@ -151,19 +255,19 @@ def register():
     # INSERT the user's inputs in the database if request method is POST
     if request.method == "POST":
 
+        # Ensure if user filled Username field
+        if not user_username:
+            flash("Please fill the \"Username\" field.")
+            return redirect("/register")
+
         # Ensure if username is already exists in the database
         for i in range(len(all_users)):
             if user_username in all_users[i]["username"]:
                 flash("The username you choose already exists.")
                 return redirect("/register")
-
-        # Ensure if user filled Username field
-        if len(user_username) < 1:
-            flash("Please fill the \"Username\" field.")
-            return redirect("/register")
         
         # Ensure if user filled email field
-        if len(user_email) < 1:
+        if not user_email:
             flash("Please fill the \"E-mail\" field.")
             return redirect("/register")
         
@@ -179,12 +283,12 @@ def register():
                 return redirect("/register")
         
         # Ensure if user filled password field
-        if len(user_password) < 1:
+        if not user_password:
             flash("Please fill the \"Password\" field.")
             return redirect("/register")
         
         # Ensure if user filled password confirmation field
-        if len(user_confirm) < 1:
+        if not user_confirm:
             flash("Please fill the \"Confirm Password\" field.")
             return redirect("/register")
         
@@ -204,7 +308,7 @@ def register():
             return redirect("/register")
         
         # Ensure if user filled password field
-        if len(user_city) < 1:
+        if not user_city:
             flash("Please fill the \"City\" field.")
             return redirect("/register")
         
@@ -387,10 +491,6 @@ def upload_profile_picture():
             # https://docs.python.org/3/library/os.html
             if os.path.exists(f"static/pictures/{session['user_id']}/pp") == False:
                 os.makedirs(f"static/pictures/{session['user_id']}/pp")
-            """ try:
-                os.makedirs(f"static/pictures/{session['user_id']}/pp")
-            except FileExistsError:
-                pass """
             
             # Save the image in directory
             img.save(os.path.join(upload_path, secure))
@@ -562,12 +662,12 @@ def exchange():
             user_description.lower()
 
         # Ensure if user filled title field
-        if len(user_title) < 1:
+        if not user_title:
             flash("Please fill the \"Book Title\" field.")
             return redirect("/exchange")
         
         # Ensure if user filled author field
-        if len(user_author) < 1:
+        if not user_author:
             flash("Please fill the \"Book Author\" field.")
             return redirect("/exchange")
         
@@ -601,11 +701,10 @@ def exchange():
             # Save the image(s)
             elif img[i].filename != '' and allowed_file(img[i].filename) == True:
 
-                # Save the latest image id number in the database
+                # Save the latest image id number in a variable
                 img_id = db.execute("SELECT id FROM images ORDER BY id DESC;")
 
                 # Create a directory for book images if not exists
-                # https://docs.python.org/3/library/os.html
                 if os.path.exists(f"static/pictures/{session['user_id']}/bp") == False:
                     os.makedirs(f"static/pictures/{session['user_id']}/bp")
                 

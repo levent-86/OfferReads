@@ -1,4 +1,4 @@
-// Collect the input and preview image tags in a variable
+// Collect the input and preview image tags in variables
 const imgInput = document.querySelector(".img-input");
 const imgWarn = document.querySelector(".image-warn");
 const imgParent = document.getElementById("image-node");
@@ -50,8 +50,12 @@ imgInput.addEventListener("change", () => {
 })
 
 // Resize the <textarea> tag when clicked
-textArea.addEventListener("click", () => {
+textArea.addEventListener("focus", () => {
     textArea.style.height = "15rem";
+})
+textArea.addEventListener("focusout", () => {
+    textArea.style.height = "0rem";
+    textArea.style.width = "20rem";
 })
 
 // Count the characters on the <textarea> tag

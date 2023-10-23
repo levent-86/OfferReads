@@ -1,17 +1,20 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    {{ books_name }}
+    {{ book_titles }}
 {% endblock %}
 
 {% block main %}
     <div class="container-fluid mt-5 book-container">
         <div class="row">
             <!-- User informations -->
-            <div class="col-sm border border-primary-subtle border-top-0 border-left-0 border-bottom-0">
+            <div class="col-sm">
+                <p class="mt-5 text-muted">User Informations</p>
                 <div class="mt-5">
                     {% if profile_picture != None %}
                         <img src="../static/pictures/{{ user_id }}/pp/{{ profile_picture }}" style="width: 3rem; height: 3rem;" alt="profile picture">
+                    {% else %}
+                        <img src="../static/person-circle.svg" style="width: 3rem; height: 3rem; opacity: .5;" alt="profile picture">
                     {% endif %}
                     <a href="#">{{ username }}</a>
                     <p class="mt-5">Location</p>
@@ -21,28 +24,35 @@
                 </div>
             </div>
 
-
             <!-- Book informations -->
-            <div class="col-sm-7 bg-light">
+            <div class="col-sm-7 bg-light border border-primary-subtle border-top-0 border-left-0 border-bottom-0">
                 <p class="mt-5 mb-4 text-muted">{{ book_date }}</p>
-                <h4>{{ books_name }} - {{ author }} </h4>
+                <h4>{{ book_titles }} - {{ author }} </h4>
                 {% for book_image in book_images %}
                     {% if book_image.image != None %}
                         <img src="../static/pictures/{{ user_id }}/bp/{{ book_image.image }}" class="each-image" alt="book images" style="width: 10rem; height: 14rem; object-fit: cover; margin: .2rem; cursor: zoom-in;">
+                    {% else %}
+                        <img src="../static/book-circle.svg" class="each-image" alt="book images" style="width: 10rem; height: 14rem; object-fit: cover; margin: .2rem; cursor: zoom-in; opacity: .5;">
                     {% endif %}
                 {% endfor %}
                 {% if condition != None %}
                     <p class="mt-4">Condition: {{ condition }}</p>
+                {% else %}
+                    <p class="mt-4">No condition information.</p>
                 {% endif %}
                 {% if description != None %}
                     <h5 class="mt-4">Book Description</h5>
                     <p class="mb-5">{{ description }}</p>
+                {% else %}
+                    <p class="mb-5">No description information.</p>
                 {% endif %}
 
-                <button type="submit" class="btn btn-primary btn-lg mb-4" style="width: fit-content;">OFFER A BOOK</button>
+                {% if session["user_id"] != user_id %}
+                    <button type="button" class="btn btn-primary btn-lg mb-4 offer-btn" style="width: fit-content;">OFFER A BOOK</button>
+                {% endif %}
             </div>
-            <div class="col-sm border border-primary-subtle border-top-0 border-right-0 border-bottom-0">
-                Offers
+            <div class="col-sm">
+                <p class="mt-5 text-muted">Latest Offers</p>
             </div>
         </div>
 
@@ -56,11 +66,55 @@
             {% endif %}
         {% endfor %}
 
-        <!-- Modal for offer -->
+        
+        {% if session["user_id"] != user_id %}
+            <!-- Modal for offer -->
+            <div class="offer-modal offer-close d-flex justify-content-center align-items-center">
+                <div class="bg-light rounded" style="max-width: 100%;">
+                    <form action="/book/{{ books_id }}{{ books_name }}" method="post" enctype="multipart/form-data" class="d-inline-flex flex-sm-column flex-wrap justify-content-center align-items-center mt-5">
+                        <div class="mb-4">
+                            <label for="image" class="image-node" id="image-node">
+                                <img src="../static/book-circle.svg" class="book-picture rounded-circle mb-4 preview-opacity" alt="Book Picture" id="rounded-circle">
+                            </label>
+                            <p class="text-muted">You can choose more than one image.</p>
+                            <p class="text-muted">(Max 10 images)</p>
+                            <p class="image-warn text-danger"></p>
+                            <input type="file" name="image" id="image" class="form-control mx-auto w-auto img-input" multiple>
+                            
+                        </div>
+                        <div class="mb-4">
+                            <input size="30" type="text" name="book_title" class="form-control form-control-md mx-auto w-auto" id="book_title" placeholder="Book Title" required>
+                        </div>
+                        <div class="mb-4">
+                            <input size="30" type="text" name="book_author" class="form-control form-control-md mx-auto w-auto" id="book_author" placeholder="Book Author" required>
+                        </div>
+                        <div class="mb-4">
+                            <select name="conditions" class="form-select" aria-label="Default select example" style="width: 20rem;">
+                                <option selected disabled hidden>Select Book Condition</option>
+                                {% for condition in conditions %}
+                                    <option value="{{ condition }}">{{ condition }}</option>
+                                {% endfor %}
+                            </select>
+                            <p class="text-muted">Don't know what is this? <a href="https://en.wikipedia.org/wiki/List_of_used_book_conditions" target="_blank">Click here.</a></p>
+                        </div>
+                        <div class="mb-4 form-floating">
+                            <textarea class="form-control exc-form-control" name="description" id="floatingTextarea" maxlength="600" placeholder="Write a description about your book."></textarea>
+                            <label for="floatingTextarea">Book description.</label>
+                            <p class="text-muted"><span class="counter">600</span> characters left.</p>
+                        </div>
+                        <div class="d-flex mb-4">
+                            <button type="submit" class="btn btn-primary btn-lg me-5" style="width: fit-content;">OFFER</button>
+                            <button type="button" class="btn btn-primary btn-lg offer-cancel" style="width: fit-content;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
         
     </div>
 {% endblock %}
 
 {% block script %}
     <script src="../static/book.js"></script>
+    <script src="../static/exchange.js"></script>
 {% endblock %}
