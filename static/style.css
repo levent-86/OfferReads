@@ -214,3 +214,21 @@ input[type="file"] {
     0% {opacity: 0;}
     100% {opacity: 1;}
 }
+.offer_overflow {
+    max-width: 10rem;
+    text-align: left;
+}
+  @media only screen and (max-width: 1200px) {
+    .offer_overflow {
+        white-space: wrap;
+        overflow: hidden;
+        text-align: left;
+    }
+    .list-group-item-action {
+        flex-wrap: wrap;
+    }
+}
+
+/* .offered_close {
+    display: none;
+} */

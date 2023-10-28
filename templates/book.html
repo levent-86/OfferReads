@@ -1,13 +1,20 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    {{ book_titles }}
+    {{ book_titles.title() }}
 {% endblock %}
 
 {% block main %}
+    <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+        <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#" onclick="history.go(-1)">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Book: {{ book_titles.title() }}</li>
+        </ol>
+    </nav>
+
     <div class="container-fluid mt-5 book-container">
         <div class="row">
-            <!-- User informations -->
+            <!-- Show user informations -->
             <div class="col-sm">
                 <p class="mt-5 text-muted">User Informations</p>
                 <div class="mt-5">
@@ -18,16 +25,16 @@
                     {% endif %}
                     <a href="#">{{ username }}</a>
                     <p class="mt-5">Location</p>
-                    <p>Country: {{ country }}</p>
-                    <p>City: {{ city }}</p>
+                    <p>Country: {{ country.title() }}</p>
+                    <p>City: {{ city.title() }}</p>
                     <p class="text-muted mt-5">member since; {{ date }}</p>
                 </div>
             </div>
 
-            <!-- Book informations -->
-            <div class="col-sm-7 bg-light border border-primary-subtle border-top-0 border-left-0 border-bottom-0">
+            <!-- Show book informations -->
+            <div class="col-sm-7 bg-light border border-primary-subtle border-top-0 border-bottom-0">
                 <p class="mt-5 mb-4 text-muted">{{ book_date }}</p>
-                <h4>{{ book_titles }} - {{ author }} </h4>
+                <h4>{{ book_titles.title() }} - {{ author.title() }} </h4>
                 {% for book_image in book_images %}
                     {% if book_image.image != None %}
                         <img src="../static/pictures/{{ user_id }}/bp/{{ book_image.image }}" class="each-image" alt="book images" style="width: 10rem; height: 14rem; object-fit: cover; margin: .2rem; cursor: zoom-in;">
@@ -51,8 +58,43 @@
                     <button type="button" class="btn btn-primary btn-lg mb-4 offer-btn" style="width: fit-content;">OFFER A BOOK</button>
                 {% endif %}
             </div>
+
+            <!-- Show offer informations -->
             <div class="col-sm">
                 <p class="mt-5 text-muted">Latest Offers</p>
+                <div class="list-group mt-4 d-flex flex-column">
+                    {% for offered_book in offered_books %}
+                        {% if offered_book.title != None %}
+                            {% if user_id == session["user_id"] or offered_book.user_id == session["user_id"] %}
+                                <a href="{{ url_for('offered', offered_id=offered_book.id, offered_name=offered_book.title) }}" class="list-group-item list-group-item-action d-flex flex-row align-items-center mt-3">
+                                    {% if offered_book.image != None %}
+                                        <img src="../static/pictures/{{ offered_book.user_id }}/bp/{{ offered_book.image }}" class="align-self-center" alt="book picture" style="width: 5rem; height: 5rem; object-fit: cover;">
+                                    {% else %}
+                                        <img src="../static/book-circle.svg" class="align-self-center" alt="book picture" style="width: 5rem; height: 5rem; object-fit: cover; opacity: .5;">
+                                    {% endif %}
+                                    <div class="d-flex flex-column align-items-start justify-content-center ms-2">
+                                        <h5 class="mb-auto text-truncate offer_overflow">{{ offered_book.title.title() }}</h5>
+                                        <p class="mb-auto text-truncate offer_overflow">{{ offered_book.author.title() }}</p>
+                                        <p class="mb-auto text-truncate offer_overflow text-muted" style="font-size: small;">{{ offered_book.date }}</p>
+                                    </div>
+                                </a>
+                            {% else %}
+                                <div class="list-group-item list-group-item-action d-flex flex-row align-items-center mt-3">
+                                    {% if offered_book.image != None %}
+                                        <img src="../static/pictures/{{ offered_book.user_id }}/bp/{{ offered_book.image }}" class="align-self-center" alt="book picture" style="width: 5rem; height: 5rem; object-fit: cover;">
+                                    {% else %}
+                                        <img src="../static/book-circle.svg" class="align-self-center" alt="book picture" style="width: 5rem; height: 5rem; object-fit: cover; opacity: .5;">
+                                    {% endif %}
+                                    <div class="d-flex flex-column align-items-start justify-content-center ms-2">
+                                        <h5 class="mb-auto text-truncate offer_overflow">{{ offered_book.title.title() }}</h5>
+                                        <p class="mb-auto text-truncate offer_overflow">{{ offered_book.author.title() }}</p>
+                                        <p class="mb-auto text-truncate offer_overflow text-muted" style="font-size: small;">{{ offered_book.date }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
             </div>
         </div>
 
@@ -65,10 +107,9 @@
                 </div>
             {% endif %}
         {% endfor %}
-
         
+        <!-- Modal for book offer -->
         {% if session["user_id"] != user_id %}
-            <!-- Modal for offer -->
             <div class="offer-modal offer-close d-flex justify-content-center align-items-center">
                 <div class="bg-light rounded" style="max-width: 100%;">
                     <form action="/book/{{ books_id }}{{ books_name }}" method="post" enctype="multipart/form-data" class="d-inline-flex flex-sm-column flex-wrap justify-content-center align-items-center mt-5">
@@ -110,7 +151,6 @@
                 </div>
             </div>
         {% endif %}
-        
     </div>
 {% endblock %}
 

@@ -159,14 +159,40 @@ def book(books_id, books_name):
         flash(f"You're successfully offered {user_title.title()} book for {book_details[0]['title'].title()}. You can offer more than one book!")
         return redirect(f"/book/{books_id}{books_name}")
     else:
-        # Show user informations
+        # Show user informations of main book owner
         user_details = db.execute("SELECT (users.id) AS userid, country, city, username, picture, strftime('%m/%d/%Y %H:%M', users.date) AS date from users JOIN books ON users.id = books.user_id WHERE books.id = ?", books_id)
 
-        # Show book images
+        # Show book images of main book
         book_images = db.execute("SELECT image FROM images WHERE book_id = ?", books_id)
+
+        # Show offers
+        offered_books = db.execute("SELECT books.user_id, books.id, title, author, condition, description, image, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books LEFT JOIN images ON books.id = images.book_id JOIN offers ON books.id = offers.offerer_book WHERE books.is_available = 1 AND books.is_offered = 1 AND offers.receiver_book = ? GROUP BY books.id ORDER BY books.id DESC;", books_id)
         
         
-        return render_template("book.html", greet=greet_user(), picture=profile_picture(), books_id=books_id, books_name=books_name, book_titles=book_details[0]["title"].title(), conditions=conditions, author=book_details[0]["author"].title(), condition=book_details[0]["condition"], description=book_details[0]["description"], user_id=user_details[0]["userid"], profile_picture=user_details[0]["picture"], username=user_details[0]["username"], country=user_details[0]["country"].title(), city=user_details[0]["city"].title(), date=user_details[0]["date"], book_images=book_images, book_date=book_details[0]["date"])
+        return render_template("book.html", greet=greet_user(), picture=profile_picture(), books_id=books_id, books_name=books_name, book_titles=book_details[0]["title"], conditions=conditions, author=book_details[0]["author"], condition=book_details[0]["condition"], description=book_details[0]["description"], user_id=user_details[0]["userid"], profile_picture=user_details[0]["picture"], username=user_details[0]["username"], country=user_details[0]["country"], city=user_details[0]["city"], date=user_details[0]["date"], book_images=book_images, book_date=book_details[0]["date"], offered_books=offered_books)
+
+
+
+@app.route("/offered/<int:offered_id><string:offered_name>", methods=["GET", "POST"])
+@login_required
+def offered(offered_id, offered_name):
+    # Display offered books
+    if request.method == "POST":
+        ...
+    else:
+        # Take previous book's name in a variable
+        prev_book_name = db.execute("SELECT books.title, books.id FROM books JOIN offers ON books.id = receiver_book WHERE receiver_book IN (SELECT receiver_book FROM offers WHERE offerer_book = ?) AND books.is_offered = 0 AND books.is_available = 1 GROUP BY books.id;", offered_id)[0]["title"]
+
+        # Offerer user informations
+        offerer_user = db.execute("SELECT users.id, username, country, city, picture, strftime('%m/%d/%Y %H:%M', users.date) AS date FROM users JOIN offers ON users.id = offers.offerer WHERE offers.offerer_book = ?;", offered_id)
+
+        # Offerer user's book informations
+        offerer_book = db.execute("SELECT * FROM books JOIN offers ON books.id = offers.offerer_book WHERE offerer_book = ? AND is_available = 1;", offered_id)
+
+        # Offered book's images
+        book_images = db.execute("SELECT * FROM images WHERE book_id = ?;", offered_id)
+
+        return render_template("offered.html", greet=greet_user(), picture=profile_picture(), offered_name=offered_name, prev_book_name=prev_book_name, offerer_user=offerer_user, offerer_book=offerer_book, book_images=book_images)
 
 
 
@@ -607,7 +633,7 @@ def mybooks():
         books = []
 
         # Query for user's books
-        user_books = db.execute("SELECT * FROM books WHERE user_id = ?", session["user_id"])
+        user_books = db.execute("SELECT * FROM books WHERE user_id = ? AND is_offered = 0 AND is_available = 1", session["user_id"])
 
         # Iterate over all user's books
         for i in range(len(user_books)):
