@@ -8,24 +8,25 @@
     <!-- Bredcrumbs -->
     <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
         <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="#" onclick="history.go(-2)">Home</a></li>
-        <li class="breadcrumb-item"><a href="#" onclick="history.go(-1)">Book: {{ prev_book_name.title() }}</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Offered Book: {{ offered_name.title() }}</li>
+            <li class="breadcrumb-item"><a href="#" onclick="history.go(-2)">Turn Back</a></li>
+            <li class="breadcrumb-item"><a href="#" onclick="history.go(-1)">Book: {{ prev_book[0]["title"].title() }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Offered Book: {{ offered_name.title() }}</li>
         </ol>
     </nav>
 
     <div class="container-fluid mt-5 book-container">
         <div class="row">
+
             <!-- Show user informations -->
             <div class="col-sm-3">
                 <p class="mt-5 text-muted">User Informations</p>
                 <div class="mt-5">
                     {% if offerer_user[0]['picture'] != None %}
-                        <img src="../static/pictures/{{ offerer_user[0]['id'] }}/pp/{{ offerer_user[0]['picture'] }}" style="width: 3rem; height: 3rem;" alt="profile picture">
+                        <img src="../static/pictures/{{ offerer_user[0]['id'] }}/pp/{{ offerer_user[0]['picture'] }}" style="width: 8rem; height: 8rem;" alt="profile picture"><br>
                     {% else %}
-                        <img src="../static/person-circle.svg" style="width: 3rem; height: 3rem; opacity: .5;" alt="profile picture">
+                        <img src="../static/person-circle.svg" style="width: 8rem; height: 8rem; opacity: .5;" alt="profile picture"><br>
                     {% endif %}
-                    <a href="#">{{ offerer_user[0]['username'] }}</a>
+                    <a href="{{ url_for('user', username=offerer_user[0]['username']) }}">{{ offerer_user[0]['username'] }}</a>
                     <p class="mt-5">Location</p>
                     <p>Country: {{ offerer_user[0]['country'].title() }}</p>
                     <p>City: {{ offerer_user[0]['city'].title() }}</p>
@@ -54,6 +55,22 @@
                     <p class="mb-5">{{ offerer_book[0]['description'] }}</p>
                 {% else %}
                     <p class="mb-5">No description information.</p>
+                {% endif %}
+                
+                {% if session["user_id"] == offerer_user[0]['id'] %}
+                    <form action="/offered/{{ offered_id }}{{ offered_name }}" method="post">
+                        <input name="offer_remove" value="{{ offered_id }}" hidden>
+                        <button type="submit" class="btn btn-primary btn-lg mb-4 offer-btn" style="width: fit-content;">Remove Offer</button>
+                    </form>
+                {% else %}
+                    <form action="/offered/{{ offered_id }}{{ offered_name }}" method="post">
+                        <input name="offer_accept" value="{{ offered_id }}" hidden>
+                        <button type="submit" class="btn btn-primary btn-lg mb-4 offer-btn" style="width: fit-content;">Accept Offer</button>
+                    </form>
+                    <form action="/offered/{{ offered_id }}{{ offered_name }}" method="post">
+                        <input name="offer_decline" value="{{ offered_id }}" hidden>
+                        <button type="submit" class="btn btn-primary btn-lg mb-4 offer-btn" style="width: fit-content;">Decline Offer</button>
+                    </form>
                 {% endif %}
             </div>
         </div>

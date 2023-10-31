@@ -40,7 +40,7 @@ def index():
     # Redirect to clicked book or user / show all books
     else:
         # Query all available books
-        all_books = db.execute("SELECT (users.id) AS userid, username, (books.id) AS bookid, title, author, condition, image, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books JOIN users ON books.user_id = users.id INNER JOIN images ON books.id = images.book_id WHERE is_offered = 0 AND is_available = 1 GROUP BY books.id, images.book_id;")
+        all_books = db.execute("SELECT (users.id) AS userid, username, (books.id) AS bookid, title, author, condition, image, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books JOIN users ON books.user_id = users.id INNER JOIN images ON books.id = images.book_id WHERE is_offered = 0 AND is_available = 1 GROUP BY books.id, images.book_id ORDER BY RANDOM();")
 
         return render_template("index.html", greet=greet_user(), picture=profile_picture(), all_books=all_books)
 
@@ -116,7 +116,7 @@ def book(books_id, books_name):
             if img[i].filename == '':
                 empty_book_id = db.execute("SELECT id FROM books WHERE id = ?;", offerer_book)[0]["id"]
                 db.execute("INSERT INTO images (user_id, book_id) VALUES (?, ?);", session["user_id"], empty_book_id)
-                flash(f"You're successfully offered {user_title.title()} book for {book_details[0]['title'].title()}. You can offer more than one book!")
+                flash(f"You're successfully offered {user_title.title()} book for {book_details[0]['title'].title()} book. You can offer more books!")
                 return redirect(f"/book/{books_id}{books_name}")
         
             # Ensure if input file format is right
@@ -156,7 +156,7 @@ def book(books_id, books_name):
                 db.execute("INSERT INTO images (user_id, book_id, image) VALUES (?, ?, ?);", session["user_id"], book_id, secure)
             
         # Flash the success and redirect to book.html
-        flash(f"You're successfully offered {user_title.title()} book for {book_details[0]['title'].title()}. You can offer more than one book!")
+        flash(f"You're successfully offered {user_title.title()} book for {book_details[0]['title'].title()} book. You can offer more books!")
         return redirect(f"/book/{books_id}{books_name}")
     else:
         # Show user informations of main book owner
@@ -176,13 +176,93 @@ def book(books_id, books_name):
 @app.route("/offered/<int:offered_id><string:offered_name>", methods=["GET", "POST"])
 @login_required
 def offered(offered_id, offered_name):
-    # Display offered books
-    if request.method == "POST":
-        ...
-    else:
-        # Take previous book's name in a variable
-        prev_book_name = db.execute("SELECT books.title, books.id FROM books JOIN offers ON books.id = receiver_book WHERE receiver_book IN (SELECT receiver_book FROM offers WHERE offerer_book = ?) AND books.is_offered = 0 AND books.is_available = 1 GROUP BY books.id;", offered_id)[0]["title"]
+    # Display, remove, accept/decline offered books
 
+    # Take previous book in a variable
+    prev_book = db.execute("SELECT books.title, books.id FROM books JOIN offers ON books.id = receiver_book WHERE receiver_book IN (SELECT receiver_book FROM offers WHERE offerer_book = ?) AND books.is_offered = 0 AND books.is_available = 1 GROUP BY books.id;", offered_id)
+
+    if request.method == "POST":
+        # Collect buttons informations in a variable
+        offer_remove = request.form.get("offer_remove")
+        offer_accept = request.form.get("offer_accept")
+        offer_decline = request.form.get("offer_decline")
+
+        accepted = 1
+
+        # Ensure if remove button points the right book
+        if offer_remove != None and int(offer_remove) != offered_id:
+            flash("Invalid book to remove.")
+            return redirect(f"/offered/{offered_id}{offered_name}")
+        
+        # Ensure if accept button points the right book
+        if offer_accept != None and int(offer_accept) != offered_id:
+            flash("Invalid book to accept.")
+            return redirect(f"/offered/{offered_id}{offered_name}")
+        
+        # Ensure if decline button points the right book
+        if offer_decline != None and int(offer_decline) != offered_id:
+            flash("Invalid book to decline.")
+            return redirect(f"/offered/{offered_id}{offered_name}")
+        
+        # Remove the offered book if button points the right book
+        if offer_remove != None and int(offer_remove) == offered_id:
+            db.execute("UPDATE books SET is_available = 0 WHERE id = ?;", offered_id)
+            flash("Your offer successfully removed.")
+            return redirect(f"/book/{prev_book[0]['id']}{prev_book[0]['title']}")
+
+        # Decline the offered book if button points the right book
+        if offer_decline != None and int(offer_decline) == offered_id:
+            db.execute("UPDATE books SET is_available = 0, is_accepted = ? WHERE id = ?;", -abs(accepted), offered_id)
+            flash("Offer rejected.")
+            return redirect(f"/book/{prev_book[0]['id']}{prev_book[0]['title']}")
+        
+        # Accept the offered book if button points the right book
+        if offer_accept != None and int(offer_accept) == offered_id:
+
+            # Query the all informations about offeror and offeree
+            offerer_informations = db.execute("SELECT username, fname, lname, address, phone, country, city FROM users WHERE id IN (SELECT offerer FROM offers WHERE offerer_book = ?);", offered_id)
+            o_fname = offerer_informations[0]["fname"]
+            o_lname = offerer_informations[0]["lname"]
+            o_address = offerer_informations[0]["address"]
+            o_phone = offerer_informations[0]["phone"]
+            receiver_informations = db.execute("SELECT fname, lname, address, phone, country, city FROM users WHERE id IN (SELECT receiver FROM offers WHERE offerer_book = ?);", offered_id)
+            r_fname = receiver_informations[0]["fname"]
+            r_lname = receiver_informations[0]["lname"]
+            r_address = receiver_informations[0]["address"]
+            r_phone = receiver_informations[0]["phone"]
+
+            
+            # Update the accepted book and make it unavailable
+            db.execute("UPDATE books SET is_available = 0, is_accepted = ? WHERE id = ?;", accepted, offered_id)
+            # Update the other offered books are not accepted and make them unavailable
+            db.execute("UPDATE books SET is_available = 0, is_accepted = ? WHERE id IN (SELECT receiver_book FROM offers WHERE offerer_book = ?) AND is_available = 1;", -abs(accepted), offered_id)
+            # Update the main book and make it unavailable
+            db.execute("UPDATE books SET is_available = 0 WHERE id IN (SELECT receiver_book FROM offers WHERE offerer_book = ?) AND is_available = 1 AND is_offered = 0;", offered_id)
+
+
+            # Send contact information to each other via message between the offeror and the offeree
+            if o_fname and o_lname and o_address and o_phone and r_fname and r_lname and r_address and r_phone:
+                # Query the offeror and offeree's user id
+                sender = db.execute("SELECT receiver FROM offers WHERE offerer_book = ?", offered_id)[0]["receiver"]
+                receiver = db.execute("SELECT offerer FROM offers WHERE offerer_book = ?", offered_id)[0]["offerer"]
+                # Query the offeror and offeree's book titles
+                sender_book = db.execute("SELECT title FROM books WHERE id IN (SELECT receiver_book FROM offers WHERE offerer_book = ?)", offered_id)[0]["title"]
+                receiver_book = db.execute("SELECT title FROM books WHERE id IN (SELECT offerer_book FROM offers WHERE offerer_book = ?)", offered_id)[0]["title"]
+                # Create an auto message to send each other
+                sender_message = f"Hello, {o_fname.title()}! I accepted the \"{receiver_book.title()}\" book you offered me for my \"{sender_book.title()}\" book.\nHere is my contact informations to book exchange:\nMy Address: {r_address.title()}, {receiver_informations[0]['city'].title()} / {receiver_informations[0]['country'].title()} \nMy phone number: {r_phone}\n{r_fname.title()} {r_lname.title()}"
+                receiver_message = f"Hello, {r_fname.title()}! Great news! Let's exchange the books.\n Here is my contact informations to book exchange:\nMy Address: {o_address.title()}, {offerer_informations[0]['city'].title()} / {offerer_informations[0]['country'].title()} \nMy phone number: {o_phone}\n{o_fname.title()} {o_lname.title()}"
+                # INSERT the message in the database
+                db.execute("INSERT INTO messages (sender, receiver, message) VALUES (?, ?, ?);", sender, receiver, sender_message)
+                db.execute("INSERT INTO messages (sender, receiver, message) VALUES (?, ?, ?);", receiver, sender, receiver_message)
+
+                # Flash the success and redirect user
+                flash("Congratulations! Don't forget to check your inbox!")
+                return redirect("/")
+            else:                
+                # Flash the success and redirect user
+                flash("Congratulations! Please contact the offeror.")
+                return redirect(f"/user/{offerer_informations[0]['username']}")
+    else:
         # Offerer user informations
         offerer_user = db.execute("SELECT users.id, username, country, city, picture, strftime('%m/%d/%Y %H:%M', users.date) AS date FROM users JOIN offers ON users.id = offers.offerer WHERE offers.offerer_book = ?;", offered_id)
 
@@ -192,15 +272,22 @@ def offered(offered_id, offered_name):
         # Offered book's images
         book_images = db.execute("SELECT * FROM images WHERE book_id = ?;", offered_id)
 
-        return render_template("offered.html", greet=greet_user(), picture=profile_picture(), offered_name=offered_name, prev_book_name=prev_book_name, offerer_user=offerer_user, offerer_book=offerer_book, book_images=book_images)
+        return render_template("offered.html", greet=greet_user(), picture=profile_picture(), offered_id=offered_id, offered_name=offered_name, prev_book=prev_book, offerer_user=offerer_user, offerer_book=offerer_book, book_images=book_images)
 
 
 
 @app.route("/user/<username>")
 @login_required
 def user(username):
-    # Book display and offer button
-    return render_template("user.html", greet=greet_user(), picture=profile_picture())
+    # User and book informations, message send button
+    
+    # Query the user informations
+    user = db.execute("SELECT id, username, country, city, picture, strftime('%m/%d/%Y %H:%M', users.date) AS date FROM users WHERE username = ?", username)
+
+    # Query the user's books
+    books = db.execute("SELECT (books.id) AS id, title, author, condition, strftime('%m/%d/%Y %H:%M', books.date) AS date, image FROM books JOIN images ON books.id = images.book_id WHERE books.user_id IN (SELECT id FROM users WHERE username = ?) AND is_offered = 0 AND is_available = 1 GROUP BY books.id;", username)
+
+    return render_template("user.html", greet=greet_user(), picture=profile_picture(), user=user, books=books)
 
 
 
@@ -629,28 +716,8 @@ def mybooks():
         return redirect("/mybooks")
 
     else:
-        # Create an empty list to make it a list of dict
-        books = []
-
-        # Query for user's books
-        user_books = db.execute("SELECT * FROM books WHERE user_id = ? AND is_offered = 0 AND is_available = 1", session["user_id"])
-
-        # Iterate over all user's books
-        for i in range(len(user_books)):
-            # Collect user's book data
-            book_data = db.execute("SELECT id, title, author, condition, strftime('%m/%d/%Y %H:%M', date) AS date FROM books WHERE user_id = ?;", session["user_id"])[i]
-            # Collect user's image data
-            image_data = db.execute("SELECT image FROM images WHERE user_id = ? AND book_id = ?;", session["user_id"], book_data["id"])
-
-            # save as None if there's no any image
-            if len(image_data) > 0:
-                images = image_data[0]
-            else:
-                images = {'image': None}
-
-            # Save all informations in book list
-            book_data.update(images)
-            books.append(dict(book_data))
+        # Query the user's all available books
+        books = db.execute("SELECT (books.id) AS bookid, books.user_id, title, author, condition, image, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books INNER JOIN images ON books.id = images.book_id WHERE is_offered = 0 AND is_available = 1 AND books.user_id = ? GROUP BY books.id, images.book_id;", session["user_id"])
         return render_template("mybooks.html", greet=greet_user(), picture=profile_picture(), book_data=books)
 
 

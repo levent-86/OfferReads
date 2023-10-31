@@ -7,8 +7,8 @@
 {% block main %}
     <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
         <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="#" onclick="history.go(-1)">Home</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Book: {{ book_titles.title() }}</li>
+            <li class="breadcrumb-item"><a href="#" onclick="history.go(-1)">Turn Back</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Book: {{ book_titles.title() }}</li>
         </ol>
     </nav>
 
@@ -19,11 +19,11 @@
                 <p class="mt-5 text-muted">User Informations</p>
                 <div class="mt-5">
                     {% if profile_picture != None %}
-                        <img src="../static/pictures/{{ user_id }}/pp/{{ profile_picture }}" style="width: 3rem; height: 3rem;" alt="profile picture">
+                        <img src="../static/pictures/{{ user_id }}/pp/{{ profile_picture }}" style="width: 8rem; height: 8rem;" alt="profile picture"><br>
                     {% else %}
-                        <img src="../static/person-circle.svg" style="width: 3rem; height: 3rem; opacity: .5;" alt="profile picture">
+                        <img src="../static/person-circle.svg" style="width: 8rem; height: 8rem; opacity: .5;" alt="profile picture"><br>
                     {% endif %}
-                    <a href="#">{{ username }}</a>
+                    <a href="{{ url_for('user', username=username) }}" class="mt-4">{{ username }}</a>
                     <p class="mt-5">Location</p>
                     <p>Country: {{ country.title() }}</p>
                     <p>City: {{ city.title() }}</p>

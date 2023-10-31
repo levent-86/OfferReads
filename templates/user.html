@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    User - {{ user[0]["username"] }}
+{% endblock %}
+
+{% block main %}
+    <div class="container-fluid mt-5 book-container">
+        <div class="row">
+            <!-- Show user informations -->
+            <div class="col-sm-3">
+                <p class="mt-5 text-muted">User Informations</p>
+                <div class="mt-5">
+                    {% if user[0]['picture'] != None %}
+                        <img src="../static/pictures/{{ user[0]['id'] }}/pp/{{ user[0]['picture'] }}" style="width: 8rem; height: 8rem;" alt="profile picture">
+                    {% else %}
+                        <img src="../static/person-circle.svg" style="width: 8rem; height: 8rem; opacity: .5;" alt="profile picture">
+                    {% endif %}
+                    <p class="mt-3">{{ user[0]['username'] }}</p>
+                    <p class="mt-5">Location</p>
+                    <p>Country: {{ user[0]['country'].title() }}</p>
+                    <p>City: {{ user[0]['city'].title() }}</p>
+                    <p class="text-muted mt-5">member since; {{ user[0]['date'] }}</p>
+                    <a class="btn btn-primary" href="#">Send a message</a>
+                </div>
+            </div>
+
+            <!-- Show user's books -->
+            <div class="col-sm-9 bg-light border border-primary-subtle border-top-0 border-bottom-0">
+                <p class="mt-5 text-muted">{{ user[0]["username"] }}'s all books</p>
+                <div class="d-flex flex-row flex-wrap justify-content-around align-items-center mt-5">
+                    {% if books != None %}
+                        {% for book in books %}
+                            <div class="card-deck bg-white">
+                                <div class="card mb-4" style="width: 18rem; height: 36rem;" >
+                                    {% if book["image"] != None %}
+                                        <a href="{{ url_for('book', books_id=book.id, books_name=book.title) }}"><img class="card-img-top" src="../static/pictures/{{ user[0]['id'] }}/bp/{{ book['image'] }}" alt="Card image" style="height: 18rem; width: 18rem; object-fit: cover;"></a>
+                                    {% else %}
+                                        <a href="{{ url_for('book', books_id=book.id, books_name=book.title) }}"><img class="card-img-top" src="../static/book-circle.svg" alt="Card image" style="height: 18rem; width: 18rem; object-fit: cover; opacity: .5;"></a>
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ book["title"].title() }}</h5>
+                                        <p class="card-text">{{ book["author"].title() }}</p>
+                                        {% if book["condition"] != None %}
+                                            <p class="card-text">Condition: {{ book["condition"].title() }}</p>
+                                        {% else %}
+                                            <p class="card-text">No condition information</p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-footer">
+                                        <small class="text-muted">{{ book["date"] }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                    {% else %}
+                            <p>There is no book here.</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            
+        </div>
+    </div>
+{% endblock %}

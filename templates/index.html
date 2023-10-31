@@ -36,7 +36,7 @@
                             {% if book["condition"] != None %}
                                 <p class="card-text">Condition: {{ book["condition"].title() }}</p>
                             {% endif %}
-                            <a href="#"><p class="card-text">{{ book["username"] }}</p></a>
+                            <a href="{{ url_for('user', username=book.username) }}"><p class="card-text">{{ book["username"] }}</p></a>
                         </div>
                         <div class="card-footer">
                             <small class="text-muted">{{ book["date"] }}</small>
