@@ -8,8 +8,7 @@
     <!-- Bredcrumbs -->
     <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="#" onclick="history.go(-2)">Turn Back</a></li>
-            <li class="breadcrumb-item"><a href="#" onclick="history.go(-1)">Book: {{ prev_book[0]["title"].title() }}</a></li>
+            <li class="breadcrumb-item"><a href="#" onclick="history.go(-1)">Turn Back</a></li>
             <li class="breadcrumb-item active" aria-current="page">Offered Book: {{ offered_name.title() }}</li>
         </ol>
     </nav>
@@ -57,20 +56,23 @@
                     <p class="mb-5">No description information.</p>
                 {% endif %}
                 
-                {% if session["user_id"] == offerer_user[0]['id'] %}
-                    <form action="/offered/{{ offered_id }}{{ offered_name }}" method="post">
-                        <input name="offer_remove" value="{{ offered_id }}" hidden>
-                        <button type="submit" class="btn btn-primary btn-lg mb-4 offer-btn" style="width: fit-content;">Remove Offer</button>
-                    </form>
-                {% else %}
-                    <form action="/offered/{{ offered_id }}{{ offered_name }}" method="post">
-                        <input name="offer_accept" value="{{ offered_id }}" hidden>
-                        <button type="submit" class="btn btn-primary btn-lg mb-4 offer-btn" style="width: fit-content;">Accept Offer</button>
-                    </form>
-                    <form action="/offered/{{ offered_id }}{{ offered_name }}" method="post">
-                        <input name="offer_decline" value="{{ offered_id }}" hidden>
-                        <button type="submit" class="btn btn-primary btn-lg mb-4 offer-btn" style="width: fit-content;">Decline Offer</button>
-                    </form>
+                <!-- Buttons -->
+                {% if offerer_book[0]["is_available"] %}
+                    {% if session["user_id"] == offerer_user[0]['id'] %}
+                        <form action="/offered/{{ offered_id }}{{ offered_name }}" method="post">
+                            <input name="offer_remove" value="{{ offered_id }}" hidden>
+                            <button type="submit" class="btn btn-primary btn-lg mb-4 offer-btn" style="width: fit-content;">Remove Offer</button>
+                        </form>
+                    {% else %}
+                        <form action="/offered/{{ offered_id }}{{ offered_name }}" method="post">
+                            <input name="offer_accept" value="{{ offered_id }}" hidden>
+                            <button type="submit" class="btn btn-primary btn-lg mb-4 offer-btn" style="width: fit-content;">Accept Offer</button>
+                        </form>
+                        <form action="/offered/{{ offered_id }}{{ offered_name }}" method="post">
+                            <input name="offer_decline" value="{{ offered_id }}" hidden>
+                            <button type="submit" class="btn btn-primary btn-lg mb-4 offer-btn" style="width: fit-content;">Decline Offer</button>
+                        </form>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>

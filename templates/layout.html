@@ -40,7 +40,6 @@
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                                 <li><a class="dropdown-item" href="/myprofile">My Profile</a></li>
                                 <li><a class="dropdown-item" href="/mybooks">My Books</a></li>
-                                <li><a class="dropdown-item" href="#">My Offers</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="/logout">Log Out</a></li>
                             </ul>
@@ -58,25 +57,17 @@
                                     </a>
                                     <li><hr class="dropdown-divider"></li>
                                 </li>
-                                <li><a class="dropdown-item" href="#">User {{ user }} offered a book.</a></li>
-                                <li><a class="dropdown-item" href="#">User {{ user }} accepted your offer.</a></li>
+                                <li><a class="dropdown-item" href="#">User {{ username }} offered a book.</a></li>
+                                <li><a class="dropdown-item" href="#">User {{ username }} accepted your offer.</a></li>
                             </ul>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/messages">
                                 <i class="bi bi-envelope-fill"></i>
-                                <span class="badge rounded-pill bg-danger">{{ 0 }}</span>
+                                {% if message_notification > 0 %}
+                                    <span class="badge rounded-pill bg-danger">{{ message_notification }}</span>
+                                {% endif %}
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                <li>
-                                    <a class="dropdown-item" href="#">
-                                        <span class="badge rounded-pill bg-danger">{{ 0 }}</span>
-                                        <span class="dropdown-item-text">See all messages</span>
-                                    </a>
-                                    <li><hr class="dropdown-divider"></li>
-                                </li>
-                                <li><a class="dropdown-item" href="#">User {{ user }} sent a message.</a></li>
-                            </ul>
                         </li>
                     {% else %}
                         <li class="nav-item">

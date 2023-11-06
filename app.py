@@ -5,7 +5,7 @@ from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
-from helpers import countries, login_required, login_not_required, greet_user, allowed_file, profile_picture
+from helpers import countries, login_required, login_not_required, greet_user, allowed_file, profile_picture, message_notification
 
 
 # Configure application
@@ -42,7 +42,7 @@ def index():
         # Query all available books
         all_books = db.execute("SELECT (users.id) AS userid, username, (books.id) AS bookid, title, author, condition, image, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books JOIN users ON books.user_id = users.id INNER JOIN images ON books.id = images.book_id WHERE is_offered = 0 AND is_available = 1 GROUP BY books.id, images.book_id ORDER BY RANDOM();")
 
-        return render_template("index.html", greet=greet_user(), picture=profile_picture(), all_books=all_books)
+        return render_template("index.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), all_books=all_books)
 
 
 
@@ -116,7 +116,7 @@ def book(books_id, books_name):
             if img[i].filename == '':
                 empty_book_id = db.execute("SELECT id FROM books WHERE id = ?;", offerer_book)[0]["id"]
                 db.execute("INSERT INTO images (user_id, book_id) VALUES (?, ?);", session["user_id"], empty_book_id)
-                flash(f"You're successfully offered {user_title.title()} book for {book_details[0]['title'].title()} book. You can offer more books!")
+                flash(f"You're successfully offered \"{user_title.title()}\" book for \"{book_details[0]['title'].title()}\" book. You can offer more books!")
                 return redirect(f"/book/{books_id}{books_name}")
         
             # Ensure if input file format is right
@@ -156,7 +156,7 @@ def book(books_id, books_name):
                 db.execute("INSERT INTO images (user_id, book_id, image) VALUES (?, ?, ?);", session["user_id"], book_id, secure)
             
         # Flash the success and redirect to book.html
-        flash(f"You're successfully offered {user_title.title()} book for {book_details[0]['title'].title()} book. You can offer more books!")
+        flash(f"You're successfully offered \"{user_title.title()}\" book for \"{book_details[0]['title'].title()}\" book. You can offer more books!")
         return redirect(f"/book/{books_id}{books_name}")
     else:
         # Show user informations of main book owner
@@ -165,11 +165,13 @@ def book(books_id, books_name):
         # Show book images of main book
         book_images = db.execute("SELECT image FROM images WHERE book_id = ?", books_id)
 
-        # Show offers
+        # Show other offers
         offered_books = db.execute("SELECT books.user_id, books.id, title, author, condition, description, image, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books LEFT JOIN images ON books.id = images.book_id JOIN offers ON books.id = offers.offerer_book WHERE books.is_available = 1 AND books.is_offered = 1 AND offers.receiver_book = ? GROUP BY books.id ORDER BY books.id DESC;", books_id)
+
+        # Take user's own informations to restriction on jinja
+        user = db.execute("SELECT fname, lname,address, phone FROM users WHERE id = ?", session["user_id"])
         
-        
-        return render_template("book.html", greet=greet_user(), picture=profile_picture(), books_id=books_id, books_name=books_name, book_titles=book_details[0]["title"], conditions=conditions, author=book_details[0]["author"], condition=book_details[0]["condition"], description=book_details[0]["description"], user_id=user_details[0]["userid"], profile_picture=user_details[0]["picture"], username=user_details[0]["username"], country=user_details[0]["country"], city=user_details[0]["city"], date=user_details[0]["date"], book_images=book_images, book_date=book_details[0]["date"], offered_books=offered_books)
+        return render_template("book.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), books_id=books_id, books_name=books_name, book_images=book_images, offered_books=offered_books, book_details=book_details, conditions=conditions, user_details=user_details, user=user)
 
 
 
@@ -216,70 +218,108 @@ def offered(offered_id, offered_name):
             flash("Offer rejected.")
             return redirect(f"/book/{prev_book[0]['id']}{prev_book[0]['title']}")
         
-        # Accept the offered book if button points the right book
+        # Accept the offered book if button points to the right book
         if offer_accept != None and int(offer_accept) == offered_id:
 
             # Query the all informations about offeror and offeree
-            offerer_informations = db.execute("SELECT username, fname, lname, address, phone, country, city FROM users WHERE id IN (SELECT offerer FROM offers WHERE offerer_book = ?);", offered_id)
+            offerer_informations = db.execute("SELECT username, fname, lname, address, phone, email, country, city FROM users WHERE id IN (SELECT offerer FROM offers WHERE offerer_book = ?);", offered_id)
             o_fname = offerer_informations[0]["fname"]
             o_lname = offerer_informations[0]["lname"]
             o_address = offerer_informations[0]["address"]
+            o_email = offerer_informations[0]["email"]
             o_phone = offerer_informations[0]["phone"]
-            receiver_informations = db.execute("SELECT fname, lname, address, phone, country, city FROM users WHERE id IN (SELECT receiver FROM offers WHERE offerer_book = ?);", offered_id)
+
+            receiver_informations = db.execute("SELECT fname, lname, address, phone, email, country, city FROM users WHERE id IN (SELECT receiver FROM offers WHERE offerer_book = ?);", offered_id)
             r_fname = receiver_informations[0]["fname"]
             r_lname = receiver_informations[0]["lname"]
             r_address = receiver_informations[0]["address"]
+            r_email = receiver_informations[0]["email"]
             r_phone = receiver_informations[0]["phone"]
 
             
             # Update the accepted book and make it unavailable
             db.execute("UPDATE books SET is_available = 0, is_accepted = ? WHERE id = ?;", accepted, offered_id)
             # Update the other offered books are not accepted and make them unavailable
-            db.execute("UPDATE books SET is_available = 0, is_accepted = ? WHERE id IN (SELECT receiver_book FROM offers WHERE offerer_book = ?) AND is_available = 1;", -abs(accepted), offered_id)
+            db.execute("UPDATE books SET is_available = 0, is_accepted = -1 WHERE id IN (SELECT offerer_book FROM offers WHERE receiver_book = ?) AND is_available = 1;", offered_id)
             # Update the main book and make it unavailable
             db.execute("UPDATE books SET is_available = 0 WHERE id IN (SELECT receiver_book FROM offers WHERE offerer_book = ?) AND is_available = 1 AND is_offered = 0;", offered_id)
 
 
-            # Send contact information to each other via message between the offeror and the offeree
-            if o_fname and o_lname and o_address and o_phone and r_fname and r_lname and r_address and r_phone:
-                # Query the offeror and offeree's user id
-                sender = db.execute("SELECT receiver FROM offers WHERE offerer_book = ?", offered_id)[0]["receiver"]
-                receiver = db.execute("SELECT offerer FROM offers WHERE offerer_book = ?", offered_id)[0]["offerer"]
-                # Query the offeror and offeree's book titles
-                sender_book = db.execute("SELECT title FROM books WHERE id IN (SELECT receiver_book FROM offers WHERE offerer_book = ?)", offered_id)[0]["title"]
-                receiver_book = db.execute("SELECT title FROM books WHERE id IN (SELECT offerer_book FROM offers WHERE offerer_book = ?)", offered_id)[0]["title"]
-                # Create an auto message to send each other
-                sender_message = f"Hello, {o_fname.title()}! I accepted the \"{receiver_book.title()}\" book you offered me for my \"{sender_book.title()}\" book.\nHere is my contact informations to book exchange:\nMy Address: {r_address.title()}, {receiver_informations[0]['city'].title()} / {receiver_informations[0]['country'].title()} \nMy phone number: {r_phone}\n{r_fname.title()} {r_lname.title()}"
-                receiver_message = f"Hello, {r_fname.title()}! Great news! Let's exchange the books.\n Here is my contact informations to book exchange:\nMy Address: {o_address.title()}, {offerer_informations[0]['city'].title()} / {offerer_informations[0]['country'].title()} \nMy phone number: {o_phone}\n{o_fname.title()} {o_lname.title()}"
-                # INSERT the message in the database
-                db.execute("INSERT INTO messages (sender, receiver, message) VALUES (?, ?, ?);", sender, receiver, sender_message)
-                db.execute("INSERT INTO messages (sender, receiver, message) VALUES (?, ?, ?);", receiver, sender, receiver_message)
+            # Set an auto-message to send contact informations to each other
+            # Query the offeror and offeree's user id
+            sender = db.execute("SELECT receiver FROM offers WHERE offerer_book = ?", offered_id)[0]["receiver"]
+            receiver = db.execute("SELECT offerer FROM offers WHERE offerer_book = ?", offered_id)[0]["offerer"]
+            # Query the offeror and offeree's book titles
+            sender_book = db.execute("SELECT title FROM books WHERE id IN (SELECT receiver_book FROM offers WHERE offerer_book = ?)", offered_id)[0]["title"]
+            receiver_book = db.execute("SELECT title FROM books WHERE id IN (SELECT offerer_book FROM offers WHERE offerer_book = ?)", offered_id)[0]["title"]
+            # Create an auto message to send each other
+            sender_message = f"Hello, {o_fname.title()}! I accepted the \"{receiver_book.title()}\" book you offered me for my \"{sender_book.title()}\" book.\nHere is my contact informations:\nMy Address: {r_address.title()}, {receiver_informations[0]['city'].title()} / {receiver_informations[0]['country'].title()} \nMy email: {r_email} \nMy phone number: {r_phone}\n{r_fname.title()} {r_lname.title()}"
+            receiver_message = f"Hello, {r_fname.title()}! You accepted my \"{receiver_book.title()}\" book for your \"{sender_book.title()}\" book.\nLet's exchange the books. Here is my contact informations:\nMy Address: {o_address.title()}, {offerer_informations[0]['city'].title()} / {offerer_informations[0]['country'].title()} \nMy email: {o_email} \nMy phone number: {o_phone}\n{o_fname.title()} {o_lname.title()}"
+            # INSERT the message in the database
+            db.execute("INSERT INTO messages (sender, receiver, message) VALUES (?, ?, ?);", sender, receiver, sender_message)
+            db.execute("INSERT INTO messages (sender, receiver, message) VALUES (?, ?, ?);", receiver, sender, receiver_message)
 
-                # Flash the success and redirect user
-                flash("Congratulations! Don't forget to check your inbox!")
-                return redirect("/")
-            else:                
-                # Flash the success and redirect user
-                flash("Congratulations! Please contact the offeror.")
-                return redirect(f"/user/{offerer_informations[0]['username']}")
+            # Flash the success and redirect user
+            flash("Congratulations! Don't forget to check your inbox!")
+            return redirect("/")
     else:
         # Offerer user informations
         offerer_user = db.execute("SELECT users.id, username, country, city, picture, strftime('%m/%d/%Y %H:%M', users.date) AS date FROM users JOIN offers ON users.id = offers.offerer WHERE offers.offerer_book = ?;", offered_id)
 
         # Offerer user's book informations
-        offerer_book = db.execute("SELECT * FROM books JOIN offers ON books.id = offers.offerer_book WHERE offerer_book = ? AND is_available = 1;", offered_id)
+        offerer_book = db.execute("SELECT * FROM books JOIN offers ON books.id = offers.offerer_book WHERE offerer_book = ?;", offered_id)
 
         # Offered book's images
         book_images = db.execute("SELECT * FROM images WHERE book_id = ?;", offered_id)
 
-        return render_template("offered.html", greet=greet_user(), picture=profile_picture(), offered_id=offered_id, offered_name=offered_name, prev_book=prev_book, offerer_user=offerer_user, offerer_book=offerer_book, book_images=book_images)
+        return render_template("offered.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), offered_id=offered_id, offered_name=offered_name, offerer_user=offerer_user, offerer_book=offerer_book, book_images=book_images)
+
+
+
+
+@app.route("/messages", methods=["GET", "POST"])
+@login_required
+def messages():
+    # Display messages
+    receiver = db.execute("SELECT receiver FROM messages WHERE receiver = ?;", session["user_id"])
+
+    if receiver != []:
+        messages = db.execute("SELECT users.username, COUNT(CASE WHEN is_readed = 0 THEN 1 END) AS count FROM messages JOIN users ON sender = users.id WHERE receiver = ? GROUP BY sender ORDER BY messages.id DESC;", session["user_id"])
+    else:
+        messages = None
+
+
+    if request.method == "POST":
+        readed = request.form.get("readed")
+        
+        if not readed:
+            flash("Invalid message.")
+            return redirect("/messages")
+        
+        
+        db.execute("UPDATE messages SET is_readed = 1 WHERE receiver = ? AND sender IN (SELECT id FROM users WHERE username = ?);", session["user_id"], readed)
+        return redirect(f"/message/{readed}")
+
+    else:
+
+        return render_template("messages.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), messages=messages)
+
+
+
+@app.route("/message/<username>")
+@login_required
+def message(username):
+    # Show the received auto messages
+    messages = db.execute("SELECT * FROM messages WHERE sender IN (SELECT id FROM users WHERE username = ?) AND receiver = ?;", username, session["user_id"])
+    return render_template("message.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), username=username, messages=messages)
+
 
 
 
 @app.route("/user/<username>")
 @login_required
 def user(username):
-    # User and book informations, message send button
+    # Show clicked user and book informations
     
     # Query the user informations
     user = db.execute("SELECT id, username, country, city, picture, strftime('%m/%d/%Y %H:%M', users.date) AS date FROM users WHERE username = ?", username)
@@ -287,7 +327,7 @@ def user(username):
     # Query the user's books
     books = db.execute("SELECT (books.id) AS id, title, author, condition, strftime('%m/%d/%Y %H:%M', books.date) AS date, image FROM books JOIN images ON books.id = images.book_id WHERE books.user_id IN (SELECT id FROM users WHERE username = ?) AND is_offered = 0 AND is_available = 1 GROUP BY books.id;", username)
 
-    return render_template("user.html", greet=greet_user(), picture=profile_picture(), user=user, books=books)
+    return render_template("user.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), user=user, books=books)
 
 
 
@@ -315,14 +355,17 @@ def login():
             flash("Please insert your password.")
             return redirect("/login")
 
+        # https://cs50.harvard.edu/x/2023/psets/9/finance/
         # Ensure username exists and password is correct
         if not users or not check_password_hash(users[0]["hash"], user_password):
             flash("The username and/or password you entered is incorrect.")
             return redirect("/login")
         
+        # https://cs50.harvard.edu/x/2023/psets/9/finance/
         # Clear all users
         session.clear()
 
+        # https://cs50.harvard.edu/x/2023/psets/9/finance/
         # Remember which user has logged in
         session["user_id"] = users[0]["id"]
 
@@ -560,7 +603,7 @@ def myprofile():
         if address != None:
             address = address.title()
         
-        return render_template("myprofile.html", greet=greet_user(), date=date, fname=fname, lname=lname, username=uname, email=email, user_country=country, countries=countries(), city=city, address=address, phone=phone, picture=profile_picture())
+        return render_template("myprofile.html", greet=greet_user(), message_notification=message_notification(), date=date, fname=fname, lname=lname, username=uname, email=email, user_country=country, countries=countries(), city=city, address=address, phone=phone, picture=profile_picture())
 
 
 
@@ -716,9 +759,18 @@ def mybooks():
         return redirect("/mybooks")
 
     else:
-        # Query the user's all available books
-        books = db.execute("SELECT (books.id) AS bookid, books.user_id, title, author, condition, image, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books INNER JOIN images ON books.id = images.book_id WHERE is_offered = 0 AND is_available = 1 AND books.user_id = ? GROUP BY books.id, images.book_id;", session["user_id"])
-        return render_template("mybooks.html", greet=greet_user(), picture=profile_picture(), book_data=books)
+        # Query the user's all available non-offered books
+        active_books = db.execute("SELECT (books.id) AS bookid, books.user_id, title, author, condition, image, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books INNER JOIN images ON books.id = images.book_id WHERE is_offered = 0 AND is_available = 1 AND books.user_id = ? GROUP BY books.id, images.book_id;", session["user_id"])
+
+        # Query the user's all unavailable non-offered books
+        passive_books = db.execute("SELECT (books.id) AS bookid, books.user_id, title, author, condition, image, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books INNER JOIN images ON books.id = images.book_id WHERE is_offered = 0 AND is_available = 0 AND books.user_id = ? GROUP BY books.id, images.book_id;", session["user_id"])
+
+        # Query the user's all available offered books
+        active_offers = db.execute("SELECT (books.id) AS bookid, books.user_id, title, author, condition, image, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books INNER JOIN images ON books.id = images.book_id WHERE is_offered = 1 AND is_available = 1 AND books.user_id = ? GROUP BY books.id, images.book_id;", session["user_id"])
+
+        # Query the user's all unavailable offered books
+        passive_offers = db.execute("SELECT (books.id) AS bookid, books.user_id, title, author, condition, image, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books INNER JOIN images ON books.id = images.book_id WHERE is_offered = 1 AND is_available = 0 AND books.user_id = ? GROUP BY books.id, images.book_id;", session["user_id"])
+        return render_template("mybooks.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), active_books=active_books, passive_books=passive_books, active_offers=active_offers, passive_offers=passive_offers)
 
 
 
@@ -826,4 +878,4 @@ def exchange():
         flash("Your book ready to exchange.")
         return redirect("/mybooks")
     else:
-        return render_template("exchange.html", greet=greet_user(), picture=profile_picture(), conditions=conditions)
+        return render_template("exchange.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), conditions=conditions)

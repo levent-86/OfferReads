@@ -4,36 +4,153 @@
     My Books
 {% endblock %}
 
+<!-- https://getbootstrap.com/docs/5.0/components/list-group/#javascript-behavior -->
+<!-- https://getbootstrap.com/docs/5.0/components/navs-tabs/#javascript-behavior -->
+
 {% block main %}
-    <div class="d-flex flex-row flex-wrap justify-content-around align-items-center">
-        {% if book_data != None %}
-            {% for book in book_data %}
-                <div class="card-deck">
-                    <div class="card mb-4" style="width: 18rem; height: 36rem;" >
-                        {% if book["image"] != None %}
-                            <a href="#"><img class="card-img-top" src="../static/pictures/{{ session['user_id'] }}/bp/{{ book['image'] }}" alt="Card image" style="height: 18rem; width: 18rem; object-fit: cover;"></a>
-                        {% else %}
-                            <a href="#"><img class="card-img-top" src="../static/book-circle.svg" alt="Card image" style="height: 18rem; width: 18rem; object-fit: cover; opacity: .5;"></a>
-                        {% endif %}
-                        <div class="card-body">
-                            <h5 class="card-title">{{ book["title"].title() }}</h5>
-                            <p class="card-text">{{ book["author"].title() }}</p>
-                            {% if book["condition"] != None %}
-                                <p class="card-text">Condition: {{ book["condition"].title() }}</p>
-                            {% endif %}
+    <ul class="nav nav-tabs d-flex justify-content-around">
+        <li class="nav-item">
+            <a class="nav-link active" id="tab1" data-bs-toggle="tab" href="#ab">Active Books</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab2" data-bs-toggle="tab" href="#pb">Passive Books</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab3" data-bs-toggle="tab" href="#ao">Active Offers</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab4" data-bs-toggle="tab" href="#po">Passive Offers</a>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-5">
+        <!-- Active Books -->
+        <div class="tab-pane fade show active" id="ab">
+            <div class="d-flex flex-row flex-wrap justify-content-around align-items-center">
+                {% if active_books != None %}
+                    {% for book in active_books %}
+                        <div class="card-deck">
+                            <div class="card mb-4" style="width: 18rem; height: 36rem;" >
+                                {% if book["image"] != None %}
+                                    <a href="{{ url_for('book', books_id=book.bookid, books_name=book.title) }}"><img class="card-img-top" src="../static/pictures/{{ session['user_id'] }}/bp/{{ book['image'] }}" alt="Card image" style="height: 18rem; width: 18rem; object-fit: cover;"></a>
+                                {% else %}
+                                    <a href="{{ url_for('book', books_id=book.bookid, books_name=book.title) }}"><img class="card-img-top" src="../static/book-circle.svg" alt="Card image" style="height: 18rem; width: 18rem; object-fit: cover; opacity: .5;"></a>
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ book["title"].title() }}</h5>
+                                    <p class="card-text">{{ book["author"].title() }}</p>
+                                    {% if book["condition"] != None %}
+                                        <p class="card-text">Condition: {{ book["condition"].title() }}</p>
+                                    {% endif %}
+                                </div>
+                                <div class="card-footer">
+                                    <small class="text-muted">{{ book["date"] }}</small>
+                                </div>
+                            </div>
+                            <form action="/mybooks" method="post">
+                                <input name="book" value="{{ book['id'] }}" hidden>
+                                <button type="submit" class="btn btn-primary mb-5 btn-lg" style="width: fit-content;">Delete</button>
+                            </form>
                         </div>
-                        <div class="card-footer">
-                            <small class="text-muted">{{ book["date"] }}</small>
+                {% else %}
+                        <p>There is no active book here.</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+        <div class="tab-pane fade" id="pb">
+            <!-- Passive Books -->
+            <div class="d-flex flex-row flex-wrap justify-content-around align-items-center">
+                {% if passive_books != None %}
+                    {% for book in passive_books %}
+                        <div class="card-deck">
+                            <div class="card mb-4" style="width: 18rem; height: 36rem;" >
+                                {% if book["image"] != None %}
+                                    <a href="{{ url_for('book', books_id=book.bookid, books_name=book.title) }}"><img class="card-img-top" src="../static/pictures/{{ session['user_id'] }}/bp/{{ book['image'] }}" alt="Card image" style="height: 18rem; width: 18rem; object-fit: cover;"></a>
+                                {% else %}
+                                    <a href="{{ url_for('book', books_id=book.bookid, books_name=book.title) }}"><img class="card-img-top" src="../static/book-circle.svg" alt="Card image" style="height: 18rem; width: 18rem; object-fit: cover; opacity: .5;"></a>
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ book["title"].title() }}</h5>
+                                    <p class="card-text">{{ book["author"].title() }}</p>
+                                    {% if book["condition"] != None %}
+                                        <p class="card-text">Condition: {{ book["condition"].title() }}</p>
+                                    {% endif %}
+                                </div>
+                                <div class="card-footer">
+                                    <small class="text-muted">{{ book["date"] }}</small>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <form action="/mybooks" method="post">
-                        <input name="book" value="{{ book['id'] }}" hidden>
-                        <button type="submit" class="btn btn-primary mb-5 btn-lg" style="width: fit-content;">Delete</button>
-                    </form>
-                </div>
-        {% else %}
-                <p>There is no book here.</p>
-            {% endfor %}
-        {% endif %}
+                {% else %}
+                        <p>There is no passive book here.</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+        <div class="tab-pane fade" id="ao">
+            <!-- Active Offers -->
+            <div class="d-flex flex-row flex-wrap justify-content-around align-items-center">
+                {% if active_offers != None %}
+                    {% for book in active_offers %}
+                        <div class="card-deck">
+                            <div class="card mb-4" style="width: 18rem; height: 36rem;" >
+                                {% if book["image"] != None %}
+                                    <a href="{{ url_for('offered', offered_id=book.bookid, offered_name=book.title) }}"><img class="card-img-top" src="../static/pictures/{{ session['user_id'] }}/bp/{{ book['image'] }}" alt="Card image" style="height: 18rem; width: 18rem; object-fit: cover;"></a>
+                                {% else %}
+                                    <a href="{{ url_for('offered', offered_id=book.bookid, offered_name=book.title) }}"><img class="card-img-top" src="../static/book-circle.svg" alt="Card image" style="height: 18rem; width: 18rem; object-fit: cover; opacity: .5;"></a>
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ book["title"].title() }}</h5>
+                                    <p class="card-text">{{ book["author"].title() }}</p>
+                                    {% if book["condition"] != None %}
+                                        <p class="card-text">Condition: {{ book["condition"].title() }}</p>
+                                    {% endif %}
+                                </div>
+                                <div class="card-footer">
+                                    <small class="text-muted">{{ book["date"] }}</small>
+                                </div>
+                            </div>
+                            <form action="/mybooks" method="post">
+                                <input name="book" value="{{ book['id'] }}" hidden>
+                                <button type="submit" class="btn btn-primary mb-5 btn-lg" style="width: fit-content;">Delete</button>
+                            </form>
+                        </div>
+                {% else %}
+                        <p>There is no active offer here.</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+        <div class="tab-pane fade" id="po">
+            <!-- Passive Offers -->
+            <div class="d-flex flex-row flex-wrap justify-content-around align-items-center">
+                {% if passive_offers != None %}
+                    {% for book in passive_offers %}
+                        <div class="card-deck">
+                            <div class="card mb-4" style="width: 18rem; height: 36rem;" >
+                                {% if book["image"] != None %}
+                                    <a href="{{ url_for('offered', offered_id=book.bookid, offered_name=book.title) }}"><img class="card-img-top" src="../static/pictures/{{ session['user_id'] }}/bp/{{ book['image'] }}" alt="Card image" style="height: 18rem; width: 18rem; object-fit: cover;"></a>
+                                {% else %}
+                                    <a href="{{ url_for('offered', offered_id=book.bookid, offered_name=book.title) }}"><img class="card-img-top" src="../static/book-circle.svg" alt="Card image" style="height: 18rem; width: 18rem; object-fit: cover; opacity: .5;"></a>
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ book["title"].title() }}</h5>
+                                    <p class="card-text">{{ book["author"].title() }}</p>
+                                    {% if book["condition"] != None %}
+                                        <p class="card-text">Condition: {{ book["condition"].title() }}</p>
+                                    {% endif %}
+                                </div>
+                                <div class="card-footer">
+                                    <small class="text-muted">{{ book["date"] }}</small>
+                                </div>
+                            </div>
+                        </div>
+                {% else %}
+                        <p>There is no passive offer here.</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
     </div>
 {% endblock %}

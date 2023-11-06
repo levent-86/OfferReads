@@ -65,11 +65,11 @@
             </div>
             {% if fname == None or lname == None or address == None or phone == None %}
                 <div class="container-md border rounded border-info mb-5">
-                    <p  class="text-info">If you fill all "None" fields (except profile picture), you will instantly exchange contact information upon offer acceptance with others.</p>
+                    <p  class="text-info">If you fill all "None" fields (except profile picture), you will be able to exchange books with users.</p>
                 </div>
             {% else %}
                 <div class="container-md border rounded border-info mb-5">
-                    <p class="text-info">You're ready to instant book exchange with individuals.</p>
+                    <p class="text-info">You're ready to exchange books with individuals.</p>
                 </div>
             {% endif %}
             
@@ -82,11 +82,11 @@
         <div class="container-md border rounded border-warning-subtle mb-5">
             {% if fname != None and lname != None and address != None and phone != None %}
                 <div class="container-md border rounded border-warning mb-5 mt-5">
-                    <p  class="text-warning">If you delete any of this information, you will not be able to automatically exchange contact infromation with the offeror or the acceptor of your offer (You will need to contact the offeror or the acceptor yourself).</p>
+                    <p  class="text-warning">If you delete any of this information, you will not be able to exchange a book.</p>
                 </div>
             {% else %}
                 <div class="container-md border rounded border-warning mb-5 mt-5">
-                    <p  class="text-warning">You cannot automatically exchange contact information with the offeror or the acceptor because you have not filled out all the required fields above.</p>
+                    <p  class="text-warning">You can not exchange any book because you have not filled out all the required fields above.</p>
                 </div>
             {% endif %}
             {% if fname != None %}

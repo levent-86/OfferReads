@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Message - {{ username }}
+{% endblock %}
+
+{% block main %}
+    <small class="text-muted" style="text-align: left;">Message from {{ username }}</small>
+    {% for message in messages %}
+        <div class="mb-5 mt-5 bg-white">
+            <pre style="text-align: left;">{{ message.message }}</pre>
+            <p class="text-muted" style="text-align: left; font-size: small;">{{ message.date }}</p>
+        </div>
+    {% endfor %}
+{% endblock %}
