@@ -76,6 +76,13 @@ def greet_user():
 def message_notification():
     if session.get("user_id"):
         return db.execute("SELECT COUNT(*) AS count FROM messages WHERE receiver = ? AND is_readed = 0;", session["user_id"])[0]["count"]
+    
+
+
+# Offer notifications
+def offer_notification():
+    if session.get("user_id"):
+        return db.execute("SELECT COUNT(CASE WHEN is_readed = 0 THEN 1 END) AS count FROM offers JOIN books ON offers.offerer_book = books.id WHERE receiver = ? AND is_available = 1 AND is_readed = 0 AND is_offered = 1;", session["user_id"])[0]["count"]
 
 
 

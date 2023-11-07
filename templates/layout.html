@@ -29,7 +29,7 @@
                     </li>
                     {% if session["user_id"] %}
                         <li class="nav-item dropdown d-flex no-wrap">
-                            {% if picture != None %}
+                            {% if picture %}
                                 <img src="../static/pictures/{{ session['user_id'] }}/pp/{{ picture }}" class="preview-picture mini-profile-picture rounded-circle">
                             {% else %}
                                 <img src="../static/person-circle.svg" class="preview-picture mini-profile-picture rounded-circle preview-opacity">
@@ -44,24 +44,15 @@
                                 <li><a class="dropdown-item" href="/logout">Log Out</a></li>
                             </ul>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <li class="nav-item" style="margin-left: 1rem;">
+                            <a class="nav-link" href="/notifications">
                                 <i class="bi bi-bell-fill"></i>
-                                <span class="badge rounded-pill bg-danger">{{ 0 }}</span>
+                                {% if offer_notification > 0 %}
+                                    <span class="badge rounded-pill bg-danger">{{ offer_notification }}</span>
+                                {% endif %}
                             </a>
-                            <ul class="dropdown-menu  dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                <li>
-                                    <a class="dropdown-item" href="#">
-                                        <span class="badge rounded-pill bg-danger">{{ 0 }}</span>
-                                        <span class="dropdown-item-text">See all notifications</span>
-                                    </a>
-                                    <li><hr class="dropdown-divider"></li>
-                                </li>
-                                <li><a class="dropdown-item" href="#">User {{ username }} offered a book.</a></li>
-                                <li><a class="dropdown-item" href="#">User {{ username }} accepted your offer.</a></li>
-                            </ul>
                         </li>
-                        <li class="nav-item">
+                        <li class="nav-item" style="margin-left: 1rem;">
                             <a class="nav-link" href="/messages">
                                 <i class="bi bi-envelope-fill"></i>
                                 {% if message_notification > 0 %}

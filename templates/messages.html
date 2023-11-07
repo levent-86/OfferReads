@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block main %}
-    {% if messages != None %}
+    {% if messages %}
         {% for message in messages %}
             <ul class="list-group mb-3">
                 <form action="/messages" method="post">
@@ -15,7 +15,7 @@
                             <div class="ms-2 d-flex flex-column w-100 align-items-start">
                                 <p class="fw-bold">Message from {{ message.username }}</p>
                             </div>
-                            {% if message.count != 0 %}
+                            {% if message.count > 0 %}
                                 <span class="badge bg-primary rounded-pill">{{ message.count }}</span>
                             {% endif %}
                         </li>

@@ -5,7 +5,13 @@
 {% endblock %}
 
 {% block main %}
-    <small class="text-muted" style="text-align: left;">Message from {{ username }}</small>
+    <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#" onclick="history.go(-1)">Turn Back</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Message from {{ username }}</li>
+        </ol>
+    </nav>
+    
     {% for message in messages %}
         <div class="mb-5 mt-5 bg-white">
             <pre style="text-align: left;">{{ message.message }}</pre>
