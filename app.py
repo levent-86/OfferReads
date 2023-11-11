@@ -52,7 +52,7 @@ def index():
 def book(books_id, books_name):
 
     # Show book details
-    book_details = db.execute("SELECT books.user_id, (books.id) AS bookid, title, author, condition, description, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books JOIN users ON books.user_id = users.id WHERE books.id = ?", books_id)
+    book_details = db.execute("SELECT books.user_id, (books.id) AS bookid, title, author, condition, description, strftime('%m/%d/%Y %H:%M', books.date) AS date, is_offered, is_available FROM books JOIN users ON books.user_id = users.id WHERE books.id = ?", books_id)
 
     conditions = [
         "As new",
@@ -70,7 +70,7 @@ def book(books_id, books_name):
         # Book offering inputs
         # Collect user's data from exchange.html template
         img = request.files.getlist("image")
-        user_title = request.form.get("book_title").lower()
+        user_title = request.form.get("book_title")
         user_author = request.form.get("book_author").lower()
         user_condition = request.form.get("conditions")
         user_description = request.form.get("description")
@@ -101,7 +101,7 @@ def book(books_id, books_name):
             user_description = None
 
         # Insert book informations to database's books table as offer
-        db.execute("INSERT INTO books (user_id, title, author, condition, description, is_offered) VALUES (?, ?, ?, ?, ?, ?);", session["user_id"], user_title, user_author, user_condition, user_description, 1)
+        db.execute("INSERT INTO books (user_id, title, author, condition, description, is_offered) VALUES (?, ?, ?, ?, ?, ?);", session["user_id"], user_title.lower(), user_author, user_condition, user_description, 1)
 
         # Insert offer informations to database's offers table
         offerer_book = db.execute("SELECT id FROM books WHERE user_id = ? AND is_offered = ? ORDER BY id DESC;", session["user_id"], 1)[0]["id"]
@@ -147,7 +147,7 @@ def book(books_id, books_name):
                 secure = secure_filename(img[i].filename)
 
                 # Select user's latest book id
-                book_id = db.execute("SELECT id FROM books WHERE user_id = ? AND title = ? AND author = ? AND is_offered = ? ORDER BY id DESC;", session["user_id"], user_title, user_author, 1)[0]["id"]
+                book_id = db.execute("SELECT id FROM books WHERE user_id = ? AND title = ? AND author = ? AND is_offered = ? ORDER BY id DESC;", session["user_id"], user_title.lower(), user_author, 1)[0]["id"]
                 
 
                 # Save the image in directory
@@ -192,34 +192,37 @@ def offered(offered_id, offered_name):
         accepted = 1
 
         # Ensure if remove button points the right book
-        if offer_remove != None and int(offer_remove) != offered_id:
+        if offer_remove and int(offer_remove) != offered_id:
             flash("Invalid book to remove.")
             return redirect(f"/offered/{offered_id}{offered_name}")
         
         # Ensure if accept button points the right book
-        if offer_accept != None and int(offer_accept) != offered_id:
+        if offer_accept and int(offer_accept) != offered_id:
             flash("Invalid book to accept.")
             return redirect(f"/offered/{offered_id}{offered_name}")
         
         # Ensure if decline button points the right book
-        if offer_decline != None and int(offer_decline) != offered_id:
+        if offer_decline and int(offer_decline) != offered_id:
             flash("Invalid book to decline.")
             return redirect(f"/offered/{offered_id}{offered_name}")
         
-        # Remove the offered book if button points the right book
-        if offer_remove != None and int(offer_remove) == offered_id:
-            db.execute("UPDATE books SET is_available = 0 WHERE id = ?;", offered_id)
+        # Remove the offered book if button points to the right book
+        if offer_remove and int(offer_remove) == offered_id:
+            db.execute("UPDATE books SET is_available = ?, is_accepted = ?, is_readed = ? WHERE id = ?;", 0, -abs(accepted), 1, offered_id)
             flash("Your offer successfully removed.")
             return redirect(f"/book/{prev_book[0]['id']}{prev_book[0]['title']}")
 
-        # Decline the offered book if button points the right book
-        if offer_decline != None and int(offer_decline) == offered_id:
-            db.execute("UPDATE books SET is_available = 0, is_accepted = ? WHERE id = ?;", -abs(accepted), offered_id)
+        # Decline the offered book if button points to the right book
+        if offer_decline and int(offer_decline) == offered_id:
+            db.execute("UPDATE books SET is_available = ?, is_accepted = ?, is_readed = ? WHERE id = ?;", 0, -abs(accepted), 1, offered_id)
             flash("Offer rejected.")
             return redirect(f"/book/{prev_book[0]['id']}{prev_book[0]['title']}")
         
+        # Look up the availability of the accepted book
+        is_available = db.execute("SELECT is_available FROM books WHERE id = ?;", offered_id)
+        
         # Accept the offered book if button points to the right book
-        if offer_accept != None and int(offer_accept) == offered_id:
+        if offer_accept and int(offer_accept) == offered_id and is_available[0]["is_available"] == 1:
 
             # Query the all informations about offeror and offeree
             offerer_informations = db.execute("SELECT username, fname, lname, address, phone, email, country, city FROM users WHERE id IN (SELECT offerer FROM offers WHERE offerer_book = ?);", offered_id)
@@ -240,7 +243,7 @@ def offered(offered_id, offered_name):
             # Update the accepted book and make it unavailable
             db.execute("UPDATE books SET is_available = 0, is_accepted = ? WHERE id = ?;", accepted, offered_id)
             # Update the other offered books are not accepted and make them unavailable
-            db.execute("UPDATE books SET is_available = 0, is_accepted = ? WHERE id IN (SELECT offerer_book FROM offers WHERE receiver_book = ?) AND is_available = 1;", -abs(accepted), offered_id)
+            db.execute("UPDATE books SET is_available = 0, is_accepted = ? WHERE id IN (SELECT offerer_book FROM offers WHERE receiver_book IN (SELECT receiver_book FROM offers WHERE offerer_book = ?));", -abs(accepted), offered_id)
             # Update the main book and make it unavailable
             db.execute("UPDATE books SET is_available = 0 WHERE id IN (SELECT receiver_book FROM offers WHERE offerer_book = ?) AND is_available = 1 AND is_offered = 0;", offered_id)
 
@@ -263,16 +266,19 @@ def offered(offered_id, offered_name):
             flash("Congratulations! Don't forget to check your inbox!")
             return redirect("/")
     else:
-        # Offerer user informations
+        # Take offerer user informations from database
         offerer_user = db.execute("SELECT users.id, username, country, city, picture, strftime('%m/%d/%Y %H:%M', users.date) AS date FROM users JOIN offers ON users.id = offers.offerer WHERE offers.offerer_book = ?;", offered_id)
 
-        # Offerer user's book informations
+        # Take receiver user informations from database
+        receiver_user = db.execute("SELECT receiver FROM offers WHERE offerer_book = ?;", offered_id)
+
+        # Take offerer user's book informations from database
         offerer_book = db.execute("SELECT * FROM books JOIN offers ON books.id = offers.offerer_book WHERE offerer_book = ?;", offered_id)
 
-        # Offered book's images
+        # Take offered book's images from database
         book_images = db.execute("SELECT * FROM images WHERE book_id = ?;", offered_id)
 
-        return render_template("offered.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), offer_notification=offer_notification(), offered_id=offered_id, offered_name=offered_name, offerer_user=offerer_user, offerer_book=offerer_book, book_images=book_images)
+        return render_template("offered.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), offer_notification=offer_notification(), offered_id=offered_id, offered_name=offered_name, offerer_user=offerer_user, receiver_user=receiver_user, offerer_book=offerer_book, book_images=book_images)
 
 
 
@@ -755,30 +761,44 @@ def mybooks():
 
         # Collect book's id from template
         book_id = request.form.get("book")
-        # Query all the user's books
-        all_books = db.execute("SELECT id FROM books WHERE user_id = ?;", session["user_id"])
+        offer_id = request.form.get("offer")
+       
+        # Remove user's book
+        if book_id and not offer_id:
+             # Query user's all active but non-offer books
+            all_books = db.execute("SELECT id FROM books WHERE is_available = 1 AND is_offered = 0 AND user_id = ?;", session["user_id"])
 
-        # Iterate over all the books
-        for i in range(len(all_books)):
-            #  Ensure if the book wanted to be deleted is in the database
-            if all_books[i]["id"] == int(book_id):
-                # Choose the specific book's images
-                book_img = db.execute("SELECT image FROM images WHERE user_id = ? AND book_id = ?", session["user_id"], book_id)
-                for j in range(len(book_img)):
-                    # Determine the directory of book
-                    book_path = f'{os.getcwd()}/static/pictures/{session["user_id"]}/bp/{book_img[j]["image"]}'
-                    # Delete book images from directory
-                    os.remove(book_path)
-                    # Delete book images from database
-                    db.execute("DELETE FROM images WHERE user_id = ? AND image  = ?;", session["user_id"], book_img[j]["image"])
-                
-                # Delete the book in books table
-                db.execute("DELETE FROM books WHERE user_id = ? AND id = ?;", session["user_id"], book_id)
-                
-                # Flash the success and redirect to mybooks.html
-                flash("Book deleted successfully.")
-                return redirect("/mybooks")
+            # Iterate over all the books
+            for i in range(len(all_books)):
+                #  Ensure if the book wanted to be deleted is in the database
+                if int(book_id) == all_books[i]["id"]:
+
+                    # Update the book's offers and set them unavailable if there are any
+                    db.execute("UPDATE books SET is_available = ?, is_accepted = ?, is_readed = ? WHERE id IN (SELECT offerer_book FROM offers WHERE receiver_book = ?);", 0, -1, 1, book_id)
+
+                    # Update the book itself and set it as unavailable
+                    db.execute("UPDATE books SET is_available = ? WHERE id = ?;", 0, book_id)
+                    
+                    # Flash the success and redirect to mybooks.html
+                    flash("Book removed successfully.")
+                    return redirect("/mybooks")
         
+        # Remove user's offer
+        elif not book_id and offer_id:
+            # Query user's all active offer books
+            all_offers = db.execute("SELECT id FROM books WHERE is_available = 1 AND is_offered = 1 AND user_id = ?;", session["user_id"])
+
+            # Iterate over all offer books
+            for i in range(len(all_offers)):
+                if int(offer_id) == all_offers[i]["id"]:
+
+                    # Update the offer and set it as unavailable
+                    db.execute("UPDATE books SET is_available = ?, is_accepted = ?, is_readed = ? WHERE id = ?;", 0, -1, 1, offer_id)
+
+                    # Flash the success and redirect to mybooks.html
+                    flash("Offered book removed successfully.")
+                    return redirect("/mybooks")
+
         # Show error to user in any misuse
         flash("Something went wrong. Please try again to delete your book.")
         return redirect("/mybooks")
