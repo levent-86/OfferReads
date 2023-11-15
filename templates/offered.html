@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block main %}
-    {% if receiver_user[0]["receiver"] == session["user_id"] or offerer_user[0]["id"] == session["user_id"] %}
+    {% if receiver_user and receiver_user[0]["receiver"] == session["user_id"] or offerer_user and offerer_user[0]["id"] == session["user_id"] %}
         <!-- Bredcrumbs -->
         <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
             <ol class="breadcrumb">
@@ -98,7 +98,7 @@
 {% endblock %}
 
 {% block script %}
-    {% if receiver_user[0]["receiver"] == session["user_id"] or offerer_user[0]["id"] == session["user_id"] %}
+    {% if receiver_user and receiver_user[0]["receiver"] == session["user_id"] or offerer_user and offerer_user[0]["id"] == session["user_id"] %}
         <script src="../static/book.js"></script>
     {% endif %}
 {% endblock %}

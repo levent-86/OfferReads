@@ -76,9 +76,9 @@ def book(books_id, books_name):
         user_description = request.form.get("description")
 
         # Lowercase the user inputs if not None
-        if user_condition != None:
+        if user_condition:
             user_condition.lower()
-        if user_description != None:
+        if user_description:
             user_description.lower()
 
         # Ensure if user filled title field
@@ -92,7 +92,7 @@ def book(books_id, books_name):
             return redirect(f"/book/{books_id}{books_name}")
         
         # Ensure if user enters right condition
-        if user_condition != None and user_condition not in conditions:
+        if user_condition and user_condition not in conditions:
             flash("Invalid condition.")
             return redirect(f"/book/{books_id}{books_name}")
 
@@ -116,7 +116,7 @@ def book(books_id, books_name):
             if img[i].filename == '':
                 empty_book_id = db.execute("SELECT id FROM books WHERE id = ?;", offerer_book)[0]["id"]
                 db.execute("INSERT INTO images (user_id, book_id) VALUES (?, ?);", session["user_id"], empty_book_id)
-                flash(f"You're successfully offered \"{user_title.title()}\" book for \"{book_details[0]['title'].title()}\" book. You can offer more books!")
+                flash(f"You're successfully offered \"{user_title.title()}\" book for \"{book_details[0]['title'].title()}\" book.\nYou can offer more books!")
                 return redirect(f"/book/{books_id}{books_name}")
         
             # Ensure if input file format is right
@@ -156,7 +156,7 @@ def book(books_id, books_name):
                 db.execute("INSERT INTO images (user_id, book_id, image) VALUES (?, ?, ?);", session["user_id"], book_id, secure)
             
         # Flash the success and redirect to book.html
-        flash(f"You're successfully offered \"{user_title.title()}\" book for \"{book_details[0]['title'].title()}\" book. You can offer more books!")
+        flash(f"You're successfully offered \"{user_title.title()}\" book for \"{book_details[0]['title'].title()}\" book.\nYou can offer more books!")
         return redirect(f"/book/{books_id}{books_name}")
     else:
         # Show user informations of main book owner
@@ -169,7 +169,7 @@ def book(books_id, books_name):
         offered_books = db.execute("SELECT books.user_id, books.id, title, author, condition, description, image, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books LEFT JOIN images ON books.id = images.book_id JOIN offers ON books.id = offers.offerer_book WHERE books.is_available = 1 AND books.is_offered = 1 AND offers.receiver_book = ? GROUP BY books.id ORDER BY books.id DESC;", books_id)
 
         # Take user's own informations to restriction on jinja
-        user = db.execute("SELECT fname, lname,address, phone FROM users WHERE id = ?", session["user_id"])
+        user = db.execute("SELECT id, fname, lname,address, phone FROM users WHERE id = ?", session["user_id"])
         
         return render_template("book.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), offer_notification=offer_notification(), books_id=books_id, books_name=books_name, book_images=book_images, offered_books=offered_books, book_details=book_details, conditions=conditions, user_details=user_details, user=user)
 
@@ -183,6 +183,10 @@ def offered(offered_id, offered_name):
     # Take previous book in a variable
     prev_book = db.execute("SELECT books.title, books.id FROM books JOIN offers ON books.id = receiver_book WHERE receiver_book IN (SELECT receiver_book FROM offers WHERE offerer_book = ?) AND books.is_offered = 0 AND books.is_available = 1 GROUP BY books.id;", offered_id)
 
+     # Query the all informations about offeror and offeree
+    offerer_informations = db.execute("SELECT id, username, fname, lname, address, phone, email, country, city FROM users WHERE id IN (SELECT offerer FROM offers WHERE offerer_book = ?);", offered_id)
+    receiver_informations = db.execute("SELECT id, fname, lname, address, phone, email, country, city FROM users WHERE id IN (SELECT receiver FROM offers WHERE offerer_book = ?);", offered_id)
+
     if request.method == "POST":
         # Collect buttons informations in a variable
         offer_remove = request.form.get("offer_remove")
@@ -191,15 +195,30 @@ def offered(offered_id, offered_name):
 
         accepted = 1
 
+        # Ensure if right user pushed to the remove button
+        if offer_remove and offerer_informations[0]["id"] != session["user_id"]:
+            flash("Invalid request.")
+            return redirect("/")
+
         # Ensure if remove button points the right book
         if offer_remove and int(offer_remove) != offered_id:
             flash("Invalid book to remove.")
             return redirect(f"/offered/{offered_id}{offered_name}")
         
+        # Ensure if right user pushed to the accept button
+        if offer_accept and receiver_informations[0]["id"] != session["user_id"]:
+            flash("Invalid request.")
+            return redirect("/")
+        
         # Ensure if accept button points the right book
         if offer_accept and int(offer_accept) != offered_id:
             flash("Invalid book to accept.")
             return redirect(f"/offered/{offered_id}{offered_name}")
+
+        # Ensure if right user pushed to the decline button
+        if offer_decline and receiver_informations[0]["id"] != session["user_id"]:
+            flash("Invalid request.")
+            return redirect("/")
         
         # Ensure if decline button points the right book
         if offer_decline and int(offer_decline) != offered_id:
@@ -224,22 +243,19 @@ def offered(offered_id, offered_name):
         # Accept the offered book if button points to the right book
         if offer_accept and int(offer_accept) == offered_id and is_available[0]["is_available"] == 1:
 
-            # Query the all informations about offeror and offeree
-            offerer_informations = db.execute("SELECT username, fname, lname, address, phone, email, country, city FROM users WHERE id IN (SELECT offerer FROM offers WHERE offerer_book = ?);", offered_id)
+            # Take both users' informations in the variables for auto-message
             o_fname = offerer_informations[0]["fname"]
             o_lname = offerer_informations[0]["lname"]
             o_address = offerer_informations[0]["address"]
             o_email = offerer_informations[0]["email"]
             o_phone = offerer_informations[0]["phone"]
 
-            receiver_informations = db.execute("SELECT fname, lname, address, phone, email, country, city FROM users WHERE id IN (SELECT receiver FROM offers WHERE offerer_book = ?);", offered_id)
             r_fname = receiver_informations[0]["fname"]
             r_lname = receiver_informations[0]["lname"]
             r_address = receiver_informations[0]["address"]
             r_email = receiver_informations[0]["email"]
             r_phone = receiver_informations[0]["phone"]
 
-            
             # Update the accepted book and make it unavailable
             db.execute("UPDATE books SET is_available = 0, is_accepted = ? WHERE id = ?;", accepted, offered_id)
             # Update the other offered books are not accepted and make them unavailable
@@ -288,22 +304,30 @@ def offered(offered_id, offered_name):
 def messages():
     # Display messages and UPDATE database
 
+    # Display all received messages
+    messages = db.execute("SELECT users.username, COUNT(CASE WHEN is_readed = 0 THEN 1 END) AS count FROM messages JOIN users ON sender = users.id WHERE receiver = ? GROUP BY sender ORDER BY messages.id DESC;", session["user_id"])
+
     # Set as readed when user click to message when method is POST
     if request.method == "POST":
         readed = request.form.get("readed")
         
         # Ensure if clicked to not an empty input
         if not readed:
-            flash("Invalid message.")
+            flash("Empty message.")
             return redirect("/messages")
         
-        # UPDATE database and set as readed when user click to a message
-        db.execute("UPDATE messages SET is_readed = 1 WHERE receiver = ? AND sender IN (SELECT id FROM users WHERE username = ?);", session["user_id"], readed)
-        return redirect(f"/message/{readed}")
+        # Ensure user clicked to the right message
+        for i in range(len(messages)):
+            if readed == messages[i]["username"]:
+                # UPDATE database and set as readed when user click to a message
+                db.execute("UPDATE messages SET is_readed = 1 WHERE receiver = ? AND sender IN (SELECT id FROM users WHERE username = ?);", session["user_id"], readed)
+                return redirect(f"/message/{readed}")
+        
+        # Flash a message in any misuse and redirect user to /messages again
+        flash("Invalid message.")
+        return redirect("/messages")
 
-    else:
-        # Display all received messages
-        messages = db.execute("SELECT users.username, COUNT(CASE WHEN is_readed = 0 THEN 1 END) AS count FROM messages JOIN users ON sender = users.id WHERE receiver = ? GROUP BY sender ORDER BY messages.id DESC;", session["user_id"])
+    else:        
         return render_template("messages.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), offer_notification=offer_notification(), messages=messages)
 
 
@@ -391,11 +415,9 @@ def login():
             flash("The username and/or password you entered is incorrect.")
             return redirect("/login")
         
-        # https://cs50.harvard.edu/x/2023/psets/9/finance/
         # Clear all users
         session.clear()
 
-        # https://cs50.harvard.edu/x/2023/psets/9/finance/
         # Remember which user has logged in
         session["user_id"] = users[0]["id"]
 
@@ -505,7 +527,7 @@ def register():
         db.execute("INSERT INTO users (username, email, hash, country, city) VALUES (?, ?, ?, ? ,?);", user_username, user_email, hashed_password, user_country.lower(), user_city.lower())
 
         # Flash the success
-        flash("You have successfully registered! You are ready to log in.")
+        flash("You have successfully registered!\nYou are ready to log in.")
 
         # Redirect user to home page
         return redirect("/login")
@@ -522,15 +544,6 @@ def myprofile():
     all_users = db.execute("SELECT * FROM users;")
     database = db.execute("SELECT * FROM users WHERE id = ?;", session["user_id"])
     date = db.execute("SELECT strftime('%m,%d, %Y', date) AS date FROM users WHERE id = ?;", session["user_id"])[0]["date"]
-    fname = database[0]["fname"]
-    lname = database[0]["lname"]
-    uname = database[0]["username"]
-    email = database[0]["email"]
-    password = database[0]["hash"]
-    country = database[0]["country"]
-    city = database[0]["city"]
-    address = database[0]["address"]
-    phone = database[0]["phone"]
 
     if request.method == "POST":
         # Collect user's inputs in a variable
@@ -547,15 +560,15 @@ def myprofile():
         input_phone = request.form.get("phone")
 
         # Update first name if input field not empty
-        if len(input_fname) > 0:
+        if input_fname:
             db.execute("UPDATE users SET fname = ? WHERE id = ?;", input_fname.lower(), session["user_id"])
 
         # Update last name if input field not empty
-        if len(input_lname) > 0:
+        if input_lname:
             db.execute("UPDATE users SET lname = ? WHERE id = ?;", input_lname.lower(), session["user_id"])
 
         # Ensure if username is already exists in the database and update if not exists
-        if len(input_uname) > 0:
+        if input_uname:
             for i in range(len(all_users)):
                 if input_uname in all_users[i]["username"]:
                     flash("The username you choose already exists.")
@@ -564,7 +577,7 @@ def myprofile():
                     db.execute("UPDATE users SET username = ? WHERE id = ?;", input_uname, session["user_id"])
 
         # Ensure if email is already exists in the database and update if not exists
-        if len(input_email) > 0:
+        if input_email:
             for i in range(len(all_users)):
                 if input_uname in all_users[i]["email"]:
                     flash("The email you entered already exists.")
@@ -573,9 +586,9 @@ def myprofile():
                     db.execute("UPDATE users SET email = ? WHERE id = ?;", input_email, session["user_id"])
         
         # Save the new password if user inputs
-        if len(input_password) > 0:
+        if input_password:
             # Ensure if user knows their own current password
-            if not check_password_hash(password, input_password):
+            if not check_password_hash(database[0]["hash"], input_password):
                 flash("Invalid password.")
                 return redirect("/myprofile")
             # Chack if new password is between 6-21 characters length
@@ -592,7 +605,7 @@ def myprofile():
         
 
         # Save the new country if user inputs
-        if input_country != country:
+        if input_country != database[0]["country"]:
         # Ensure if user choose the correct country
             if input_country not in countries():
                 flash("Please choose a country in the list.")
@@ -602,17 +615,17 @@ def myprofile():
         
 
         # Save the new city if user inputs
-        if len(input_city) > 0:
+        if input_city:
             db.execute("UPDATE users SET city = ? WHERE id = ?;", input_city.lower(), session["user_id"])
 
         
         # Save the address if user inputs
-        if len(input_address) > 0:
+        if input_address:
             db.execute("UPDATE users SET address = ? WHERE id = ?;", input_address.lower(), session["user_id"])
         
         
         # Save the phone number if user inputs
-        if len(input_phone) > 0:
+        if input_phone:
             db.execute("UPDATE users SET phone = ? WHERE id = ?;", input_phone, session["user_id"])
         
 
@@ -621,19 +634,8 @@ def myprofile():
         return redirect("/myprofile")
 
     else:
-        # Return string if there's no information in the database
-        if fname != None:
-            fname = fname.title()
-        if lname != None:
-            lname = lname.title()
-        if country != None:
-            country = country.title()
-        if city != None:
-            city = city.title()
-        if address != None:
-            address = address.title()
         
-        return render_template("myprofile.html", greet=greet_user(), message_notification=message_notification(), offer_notification=offer_notification(), date=date, fname=fname, lname=lname, username=uname, email=email, user_country=country, countries=countries(), city=city, address=address, phone=phone, picture=profile_picture())
+        return render_template("myprofile.html", greet=greet_user(), message_notification=message_notification(), offer_notification=offer_notification(), countries=countries(), picture=profile_picture(), database=database, date=date)
 
 
 
@@ -641,6 +643,7 @@ def myprofile():
 @app.route('/pp', methods=['POST'])
 @login_required
 def upload_profile_picture():
+    # /myprofile profile picture section
     # Save / remove user's profile picture in file system and database
 
     # Collect the image file to a variable
@@ -708,47 +711,57 @@ def upload_profile_picture():
 @app.route("/delete", methods=["POST"])
 @login_required
 def delete_myprofile():
-    # Delete parts with buttons
+    # /myprofile deletion section
+    # Delete unwanted informations from database
 
-    # Collect the data from myprofile.html
-    d_fname = request.form.get("fname")
-    d_lname = request.form.get("lname")
-    d_address = request.form.get("address")
-    d_phone = request.form.get("phone")
-    d_picture = db.execute("SELECT picture FROM users WHERE id = ?;", session["user_id"])[0]["picture"]
+    # Collect informations from myprofile.html
+    fname = request.form.get("fname")
+    lname = request.form.get("lname")
+    address = request.form.get("address")
+    phone = request.form.get("phone")
+    picture = db.execute("SELECT picture FROM users WHERE id = ?;", session["user_id"])[0]["picture"]
+
+    # Collect informations from database
+    database = db.execute("Select * FROM users WHERE id = ?;", session["user_id"])
 
     # Delete first name
-    if d_fname != None:
+    if fname and fname == database[0]["fname"]:
         db.execute("UPDATE users SET fname = NULL WHERE id = ?;", session["user_id"])
-        flash("Your name successfully deleted.")
-        return redirect("/myprofile")
     # Delete last name
-    if d_lname != None:
+    if lname and lname == database[0]["lname"]:
         db.execute("UPDATE users SET lname = NULL WHERE id = ?;", session["user_id"])
-        flash("Your last name successfully deleted.")
-        return redirect("/myprofile")
     # Delete address
-    if d_address != None:
+    if address and address == database[0]["address"]:
         db.execute("UPDATE users SET address = NULL WHERE id = ?;", session["user_id"])
-        flash("Your address successfully deleted.")
-        return redirect("/myprofile")
     # Delete phone
-    if d_phone != None:
+    if phone and phone == database[0]["phone"]:
         db.execute("UPDATE users SET phone = NULL WHERE id = ?;", session["user_id"])
-        flash("Your phone successfully deleted.")
+    
+    if fname or lname or address or phone:
+        # Unavailable the active offered books
+        db.execute("UPDATE books SET is_accepted = -1, is_readed = 1, is_available = 0 WHERE is_offered = 1 AND is_accepted = 0 AND is_available = 1 AND user_id = ?;", session["user_id"])
+        # https://www.w3schools.com/sql/sql_exists.asp
+        # Unavailable the taken active offers
+        db.execute("UPDATE books SET is_accepted = -1, is_readed = 1, is_available = 0 WHERE books.is_offered = 1 AND books.is_accepted = 0 AND books.is_available = 1 AND EXISTS (SELECT * FROM offers WHERE books.id = offers.offerer_book AND offers.receiver = ?);", session["user_id"])
+        # Unavailable the active books
+        db.execute("UPDATE books SET is_available = 0 WHERE is_offered = 0 AND is_available = 1 AND user_id = ?;", session["user_id"])
+        flash("Your information successfully deleted.")
         return redirect("/myprofile")
+    
     # Delete profile picture
-    if d_picture != None:
+    if picture and picture == database[0]["picture"]:
         # Determine the image path
-        path = f'{os.getcwd()}/static/pictures/{session["user_id"]}/pp/{d_picture}'
+        path = f'{os.getcwd()}/static/pictures/{session["user_id"]}/pp/{picture}'
         # Remove image from directory
         os.remove(path)
         # Remove image from database
         db.execute("UPDATE users SET picture = NULL WHERE id = ?;", session["user_id"])
         flash("Your profile picture successfully deleted.")
         return redirect("/myprofile")
+    
+    # Show error message in any misuse
     else:
-        flash("Something went wrong. Please try again.")
+        flash("Invalid deletion. Please try again.")
         return redirect("/myprofile")
 
 
@@ -762,6 +775,20 @@ def mybooks():
         # Collect book's id from template
         book_id = request.form.get("book")
         offer_id = request.form.get("offer")
+
+        # Collect the owner of the active book and active offered book
+        book_owner = db.execute("SELECT id FROM users WHERE id IN (SELECT user_id FROM books WHERE id = ?);", book_id)
+        offer_owner = db.execute("SELECT id FROM users WHERE id IN (SELECT user_id FROM books WHERE id = ?);", offer_id)
+
+        # Ensure if book removing by owner
+        if book_id and book_owner[0]["id"] != session["user_id"]:
+            flash("Invalid request.")
+            return redirect("/")
+        
+        # Ensure if offer removing by owner
+        if offer_id and offer_owner[0]["id"] != session["user_id"]:
+            flash("Invalid request.")
+            return redirect("/")
        
         # Remove user's book
         if book_id and not offer_id:
@@ -846,9 +873,9 @@ def exchange():
         user_description = request.form.get("description")
 
         # Lowercase the user inputs if not None
-        if user_condition != None:
+        if user_condition:
             user_condition.lower()
-        if user_description != None:
+        if user_description:
             user_description.lower()
 
         # Ensure if user filled title field
@@ -862,7 +889,7 @@ def exchange():
             return redirect("/exchange")
         
         # Ensure if user enters right condition
-        if user_condition != None and user_condition not in conditions:
+        if user_condition and user_condition not in conditions:
             flash("Invalid condition.")
             return redirect("/exchange")
 

@@ -73,10 +73,11 @@
         </div>
     </nav>
 
+    <!-- https://cs50.harvard.edu/x/2023/psets/9/finance/ -->
     {% if get_flashed_messages() %}
       <header>
           <div class="alert alert-info text-center" role="alert">
-                {{ get_flashed_messages() | join(" ") }}
+                <pre>{{ get_flashed_messages() | join(" ") }}</pre>
           </div>
       </header>
     {% endif %}

@@ -5,11 +5,11 @@
 {% endblock %}
 
 {% block main %}
-    <p class="text-primary">You are <a class="brand-name" href="/"><span class="mp-text"><span class="brand-name">Offer</span>Reads</span></a> member since {{ date }}</p>
+    <p class="text-primary">You are <a class="brand-name" href="/">OfferReads</a> member since {{ date }}</p>
     <div class="mb-5 mt-5 border rounded border-primary-subtle container-md d-inline-flex flex-sm-column flex-wrap justify-content-center">
         <form action="/pp" method="post" enctype="multipart/form-data" class="d-inline-flex flex-sm-column flex-wrap justify-content-center align-items-center mt-5">
             <label for="image">
-                {% if picture == None %}
+                {% if not picture %}
                     <img src="../static/person-circle.svg" class="preview-picture profile-picture rounded-circle mt-5 mb-4 preview-opacity" alt="Profile Picture">
                 {% else %}
                     <img src="../static/pictures/{{ session['user_id'] }}/pp/{{ picture }}" class="preview-picture profile-picture rounded-circle mt-5 mb-4" alt="Profile Picture">
@@ -18,7 +18,7 @@
             <input type="file" name="image" id="image" class="form-control mx-auto w-auto preview-input">
             <button type="submit" class="btn btn-primary btn-lg mb-4" style="width: fit-content;">Upload Picture</button>
         </form>
-        {% if picture != None %}
+        {% if picture %}
             <form action="/delete" method="post">
                 <input name="picture" value="{{ picture }}" hidden>
                 <button type="submit" class="btn btn-primary mb-5 btn-lg" style="width: fit-content;">Delete Picture</button>
@@ -26,16 +26,24 @@
         {% endif %}
         <form action="/myprofile" method="post" class="mt-5">
             <div class="mb-4">
-                <input size="30" class="form-control form-control-md mx-auto w-auto" id="fname" name="fname" placeholder="First Name: {{ fname }}" type="text">
+                {% if database[0]['fname'] %}
+                    <input size="30" class="form-control form-control-md mx-auto w-auto" id="fname" name="fname" placeholder="First Name: {{ database[0]['fname'].title() }}" type="text">
+                {% else %}
+                    <input size="30" class="form-control form-control-md mx-auto w-auto" id="fname" name="fname" placeholder="First Name: {{ database[0]['fname'] }}" type="text">
+                {% endif %}
             </div>
             <div class="mb-4">
-                <input size="30" class="form-control form-control-md mx-auto w-auto" id="lname" name="lname" placeholder="Last Name: {{ lname }}" type="text">
+                {% if database[0]['lname'] %}
+                    <input size="30" class="form-control form-control-md mx-auto w-auto" id="lname" name="lname" placeholder="Last Name: {{ database[0]['lname'].title() }}" type="text">
+                {% else %}
+                    <input size="30" class="form-control form-control-md mx-auto w-auto" id="lname" name="lname" placeholder="Last Name: {{ database[0]['lname'] }}" type="text">
+                {% endif %}
             </div>
             <div class="mb-4">
-                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="username" name="username" placeholder="Username: {{ username }}" type="text">
+                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="username" name="username" placeholder="Username: {{ database[0]['username'] }}" type="text">
             </div>
             <div class="mb-4">
-                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="email" name="email" placeholder="Email: {{ email }}" type="email">
+                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="email" name="email" placeholder="Email: {{ database[0]['email'] }}" type="email">
             </div>
             <div class="mb-4">
                 <input size="30" class="form-control form-control-md mx-auto w-auto" name="password" placeholder="Your Old Password" type="password">
@@ -48,22 +56,26 @@
             </div>
             <div class="mb-4">
                 <select name="countries" style="width: 20rem; padding-left: .5rem;">
-                    <option selected hidden>{{ user_country }}</option>
+                    <option selected hidden>{{ database[0]['country'].title() }}</option>
                     {% for country in countries %}
                         <option value="{{ country }}">{{ country }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="mb-4">
-                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="city" name="city" placeholder="City: {{ city }}" type="text">
+                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="city" name="city" placeholder="City: {{ database[0]['city'].title() }}" type="text">
             </div>
             <div class="mb-4">
-                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="address" name="address" placeholder="Addrerss: {{ address }}" type="text">
+                {% if database[0]['address'] %}
+                    <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="address" name="address" placeholder="Addrerss: {{ database[0]['address'].title() }}" type="text">
+                {% else %}
+                    <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="address" name="address" placeholder="Addrerss: {{ database[0]['address'] }}" type="text">
+                {% endif %}
             </div>
             <div class="mb-4">
-                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="phone" name="phone" placeholder="Phone: {{ phone }}" type="tel">
+                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="phone" name="phone" placeholder="Phone: {{ database[0]['phone'] }}" type="tel">
             </div>
-            {% if fname == None or lname == None or address == None or phone == None %}
+            {% if not database[0]['fname'] or not database[0]['lname'] or not database[0]['address'] or not database[0]['phone'] %}
                 <div class="container-md border rounded border-info mb-5">
                     <p  class="text-info">If you fill all "None" fields (except profile picture), you will be able to exchange books with users.</p>
                 </div>
@@ -78,38 +90,38 @@
             </div>
         </div>
     </form>
-    {% if fname != None or lname != None or address != None or phone != None %}
+    {% if database[0]['fname'] or database[0]['lname'] or database[0]['address'] or database[0]['phone'] %}
         <div class="container-md border rounded border-warning-subtle mb-5">
-            {% if fname != None and lname != None and address != None and phone != None %}
+            {% if database[0]['fname'] and database[0]['lname'] and database[0]['address'] and database[0]['phone'] %}
                 <div class="container-md border rounded border-warning mb-5 mt-5">
-                    <p  class="text-warning">If you delete any of this information, you will not be able to exchange a book.</p>
+                    <p  class="text-warning">If you delete any of this information, you will not be able to exchange a book. Also your available books, available taken/made offers will be unavailable.</p>
                 </div>
             {% else %}
                 <div class="container-md border rounded border-warning mb-5 mt-5">
                     <p  class="text-warning">You can not exchange any book because you have not filled out all the required fields above.</p>
                 </div>
             {% endif %}
-            {% if fname != None %}
+            {% if database[0]['fname'] %}
                 <form action="/delete" method="post">
-                    <input name="fname" value="{{ fname }}" hidden>
+                    <input name="fname" value="{{ database[0]['fname'] }}" hidden>
                     <button type="submit" class="btn btn-warning mb-4 btn-lg">Delete Your First Name</button>
                 </form>
             {% endif %}
-            {% if lname != None %}
+            {% if database[0]['lname'] %}
                 <form action="/delete" method="post">
-                    <input name="lname" value="{{ lname }}" hidden>
+                    <input name="lname" value="{{ database[0]['lname'] }}" hidden>
                     <button type="submit" class="btn btn-warning mb-4 btn-lg">Delete Your Last Name</button>
                 </form>
             {% endif %}
-            {% if address != None %}
+            {% if database[0]['address'] %}
                 <form action="/delete" method="post">
-                    <input name="address" value="{{ address }}" hidden>
+                    <input name="address" value="{{ database[0]['address'] }}" hidden>
                     <button type="submit" class="btn btn-warning mb-4 btn-lg">Delete Your Address</button>
                 </form>
             {% endif %}
-            {% if phone != None %}
+            {% if database[0]['phone'] %}
                 <form action="/delete" method="post">
-                    <input name="phone" value="{{ phone }}" hidden>
+                    <input name="phone" value="{{ database[0]['phone'] }}" hidden>
                     <button type="submit" class="btn btn-warning mb-5 btn-lg">Delete Your Phone</button>
                 </form>
             {% endif %}
