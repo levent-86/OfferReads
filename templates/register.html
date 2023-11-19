@@ -8,20 +8,21 @@
     <form action="/register" method="post">
         <div class="mb-4">
             <input size="30" autocomplete="off" autofocus class="form-control form-control mx-auto w-auto" id="username" name="username" placeholder="Username" type="text" required>
-            <p>(This will be asked when you want to log in.)</p>
         </div>
         <div class="mb-4">
             <input size="30" autocomplete="off" class="form-control form-control mx-auto w-auto" id="email" name="email" placeholder="E-mail" type="email" required>
         </div>
-        <div class="mb-4">
-            <input size="30" autocomplete="off" class="form-control form-control mx-auto w-auto" name="password" placeholder="Password" type="password" required>
-            <p>(Min 6, max 21 characters)</p>
+        <div class="mb-4 d-flex flex-nowrap">
+            <input size="30" autocomplete="off" class="form-control form-control mx-auto w-auto pw-inp" name="password" placeholder="Password" type="password" style="position: relative;">
+            <div class="input-group-prepend" style="position: absolute; margin-left: calc(50% + 110px) !important;">
+                <button class="btn btn-primary pw-btn" type="button" style="opacity: .5;"><i class="bi bi-eye bieye"></i></button>
+            </div>
         </div>
         <div class="mb-4">
-            <input size="30" autocomplete="off" class="form-control form-control mx-auto w-auto" name="confirmpass" placeholder="Confirm Password" type="password" required>
+            <input size="30" autocomplete="off" class="form-control form-control mx-auto w-auto pw-inp" name="confirmpass" placeholder="Confirm Password" type="password" required>
         </div>
         <div class="mb-4">
-            <select name="countries" class="reg-select form-control-md">
+            <select name="countries" class="reg-select form-control-md" style="width: 20rem; padding-left: .5rem;">
                 <option selected disabled hidden>Select country</option>
                 {% for country in countries %}
                     <option value="{{ country }}">{{ country }}</option>
@@ -33,4 +34,16 @@
         </div>
         <button class="btn btn-primary" type="submit">Register</button>
     </form>
+    <div class="mb-4 mt-5 border rounded border-info-subtle container-md d-inline-flex flex-sm-column flex-wrap justify-content-center">
+        <pre style="text-align: left;" class="text-info mt-4">
+            * All fields must be filled.
+            * Your username will be asked when you want to <a href="/login" class="text-dark">log in</a>.
+            * Your username can not contain space character, and can not be more than 30 characters length.
+            * Your password can not be less than 6 characters length, and can not be more than 21 characters length.
+        </pre>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script src="../static/register.js"></script>
 {% endblock %}

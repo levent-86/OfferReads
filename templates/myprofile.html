@@ -6,7 +6,7 @@
 
 {% block main %}
     <p class="text-primary">You are <a class="brand-name" href="/">OfferReads</a> member since {{ date }}</p>
-    <div class="mb-5 mt-5 border rounded border-primary-subtle container-md d-inline-flex flex-sm-column flex-wrap justify-content-center">
+    <div class="mb-5 mt-5 border rounded border-primary-subtle">
         <form action="/pp" method="post" enctype="multipart/form-data" class="d-inline-flex flex-sm-column flex-wrap justify-content-center align-items-center mt-5">
             <label for="image">
                 {% if not picture %}
@@ -26,56 +26,59 @@
         {% endif %}
         <form action="/myprofile" method="post" class="mt-5">
             <div class="mb-4">
-                {% if database[0]['fname'] %}
-                    <input size="30" class="form-control form-control-md mx-auto w-auto" id="fname" name="fname" placeholder="First Name: {{ database[0]['fname'].title() }}" type="text">
+                {% if user[0]['fname'] %}
+                    <input size="30" class="form-control form-control-md mx-auto w-auto" id="fname" name="fname" placeholder="First Name: {{ user[0]['fname'].title() }}" type="text">
                 {% else %}
-                    <input size="30" class="form-control form-control-md mx-auto w-auto" id="fname" name="fname" placeholder="First Name: {{ database[0]['fname'] }}" type="text">
+                    <input size="30" class="form-control form-control-md mx-auto w-auto" id="fname" name="fname" placeholder="First Name: {{ user[0]['fname'] }}" type="text">
                 {% endif %}
             </div>
             <div class="mb-4">
-                {% if database[0]['lname'] %}
-                    <input size="30" class="form-control form-control-md mx-auto w-auto" id="lname" name="lname" placeholder="Last Name: {{ database[0]['lname'].title() }}" type="text">
+                {% if user[0]['lname'] %}
+                    <input size="30" class="form-control form-control-md mx-auto w-auto" id="lname" name="lname" placeholder="Last Name: {{ user[0]['lname'].title() }}" type="text">
                 {% else %}
-                    <input size="30" class="form-control form-control-md mx-auto w-auto" id="lname" name="lname" placeholder="Last Name: {{ database[0]['lname'] }}" type="text">
+                    <input size="30" class="form-control form-control-md mx-auto w-auto" id="lname" name="lname" placeholder="Last Name: {{ user[0]['lname'] }}" type="text">
                 {% endif %}
             </div>
             <div class="mb-4">
-                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="username" name="username" placeholder="Username: {{ database[0]['username'] }}" type="text">
+                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="username" name="username" placeholder="Username: {{ user[0]['username'] }}" type="text">
             </div>
             <div class="mb-4">
-                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="email" name="email" placeholder="Email: {{ database[0]['email'] }}" type="email">
+                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="email" name="email" placeholder="Email: {{ user[0]['email'] }}" type="email">
+            </div>
+            <div class="mb-4 d-flex flex-nowrap">
+                <input size="30" autocomplete="off" class="form-control form-control mx-auto w-auto pw-inp" name="password" placeholder="Your Old Password" type="password" style="position: relative;">
+                <div class="input-group-prepend" style="position: absolute; margin-left: calc(50% + 110px) !important;">
+                    <button class="btn btn-primary pw-btn" type="button" style="opacity: .5;"><i class="bi bi-eye bieye"></i></button>
+                </div>
             </div>
             <div class="mb-4">
-                <input size="30" class="form-control form-control-md mx-auto w-auto" name="password" placeholder="Your Old Password" type="password">
+                <input size="30" class="form-control form-control-md mx-auto w-auto pw-inp" name="newpass" placeholder="Your New Password" type="password">
             </div>
             <div class="mb-4">
-                <input size="30" class="form-control form-control-md mx-auto w-auto" name="newpass" placeholder="Your New Password" type="password">
-            </div>
-            <div class="mb-4">
-                <input size="30" class="form-control form-control-md mx-auto w-auto" name="confirmpass" placeholder="Confirm New Password" type="password">
+                <input size="30" class="form-control form-control-md mx-auto w-auto pw-inp" name="confirmpass" placeholder="Confirm New Password" type="password">
             </div>
             <div class="mb-4">
                 <select name="countries" style="width: 20rem; padding-left: .5rem;">
-                    <option selected hidden>{{ database[0]['country'].title() }}</option>
+                    <option selected hidden>{{ user[0]['country'].title() }}</option>
                     {% for country in countries %}
                         <option value="{{ country }}">{{ country }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="mb-4">
-                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="city" name="city" placeholder="City: {{ database[0]['city'].title() }}" type="text">
+                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="city" name="city" placeholder="City: {{ user[0]['city'].title() }}" type="text">
             </div>
             <div class="mb-4">
-                {% if database[0]['address'] %}
-                    <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="address" name="address" placeholder="Addrerss: {{ database[0]['address'].title() }}" type="text">
+                {% if user[0]['address'] %}
+                    <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="address" name="address" placeholder="Addrerss: {{ user[0]['address'].title() }}" type="text">
                 {% else %}
-                    <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="address" name="address" placeholder="Addrerss: {{ database[0]['address'] }}" type="text">
+                    <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="address" name="address" placeholder="Addrerss: {{ user[0]['address'] }}" type="text">
                 {% endif %}
             </div>
             <div class="mb-4">
-                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="phone" name="phone" placeholder="Phone: {{ database[0]['phone'] }}" type="tel">
+                <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="phone" name="phone" placeholder="Phone: {{ user[0]['phone'] }}" type="tel">
             </div>
-            {% if not database[0]['fname'] or not database[0]['lname'] or not database[0]['address'] or not database[0]['phone'] %}
+            {% if not user[0]['fname'] or not user[0]['lname'] or not user[0]['address'] or not user[0]['phone'] %}
                 <div class="container-md border rounded border-info mb-5">
                     <p  class="text-info">If you fill all "None" fields (except profile picture), you will be able to exchange books with users.</p>
                 </div>
@@ -85,14 +88,24 @@
                 </div>
             {% endif %}
             
-            <div class="mb-7">
+            <div class="mb-5">
                 <button type="submit" class="btn btn-primary mp-hidden btn-lg mb-5">APPLY CHANGES</button>
             </div>
+            <p style="text-align: left;" class="text-info mt-4">
+                * You wont be able to exchange books with individuals if you miss any field above.<br>
+                * You will get auto messaged when you accept any offer or when your offer accepted (after you fill all "None" fields).<br>
+                * Your username will be asked when you want to log in.<br>
+                * Your username will be shown on the books you want to exchange or you offered (not your first name or last name).<br>
+                * Your username can not contain space character, and can not be more than 30 characters length.<br>
+                * You can change your password only if you type your current password first.<br>
+                * Your password can not be less than 6 characters length, and can not be more than 21 characters length.<br>
+            </p>
         </div>
     </form>
-    {% if database[0]['fname'] or database[0]['lname'] or database[0]['address'] or database[0]['phone'] %}
-        <div class="container-md border rounded border-warning-subtle mb-5">
-            {% if database[0]['fname'] and database[0]['lname'] and database[0]['address'] and database[0]['phone'] %}
+    <!-- Delete information buttons -->
+    {% if user[0]['fname'] or user[0]['lname'] or user[0]['address'] or user[0]['phone'] %}
+        <div class="border rounded border-warning-subtle mb-5">
+            {% if user[0]['fname'] and user[0]['lname'] and user[0]['address'] and user[0]['phone'] %}
                 <div class="container-md border rounded border-warning mb-5 mt-5">
                     <p  class="text-warning">If you delete any of this information, you will not be able to exchange a book. Also your available books, available taken/made offers will be unavailable.</p>
                 </div>
@@ -101,36 +114,62 @@
                     <p  class="text-warning">You can not exchange any book because you have not filled out all the required fields above.</p>
                 </div>
             {% endif %}
-            {% if database[0]['fname'] %}
+            {% if user[0]['fname'] %}
                 <form action="/delete" method="post">
-                    <input name="fname" value="{{ database[0]['fname'] }}" hidden>
+                    <input name="fname" value="{{ user[0]['fname'] }}" hidden>
                     <button type="submit" class="btn btn-warning mb-4 btn-lg">Delete Your First Name</button>
                 </form>
             {% endif %}
-            {% if database[0]['lname'] %}
+            {% if user[0]['lname'] %}
                 <form action="/delete" method="post">
-                    <input name="lname" value="{{ database[0]['lname'] }}" hidden>
+                    <input name="lname" value="{{ user[0]['lname'] }}" hidden>
                     <button type="submit" class="btn btn-warning mb-4 btn-lg">Delete Your Last Name</button>
                 </form>
             {% endif %}
-            {% if database[0]['address'] %}
+            {% if user[0]['address'] %}
                 <form action="/delete" method="post">
-                    <input name="address" value="{{ database[0]['address'] }}" hidden>
+                    <input name="address" value="{{ user[0]['address'] }}" hidden>
                     <button type="submit" class="btn btn-warning mb-4 btn-lg">Delete Your Address</button>
                 </form>
             {% endif %}
-            {% if database[0]['phone'] %}
+            {% if user[0]['phone'] %}
                 <form action="/delete" method="post">
-                    <input name="phone" value="{{ database[0]['phone'] }}" hidden>
+                    <input name="phone" value="{{ user[0]['phone'] }}" hidden>
                     <button type="submit" class="btn btn-warning mb-5 btn-lg">Delete Your Phone</button>
                 </form>
             {% endif %}
         </div>
     {% endif %}
+    <!-- Profile deletion part -->
+    <div class="border rounded border-danger-subtle mb-5">
+        <p style="text-align: left;" class="text-danger mt-5">
+            WARNING! This can't be undone.<br>
+            You may not recover this account when you delete.<br>
+            Once you delete your account;<br>
+            * Your all personal informations,<br>
+            * Your all books,<br>
+            * All the book offers you received / sent,<br>
+            * All the messages you received / sent<br>
+            will be permanently deleted.<br>
+            When you want to log in later, you will need to register a new account.<br>
+        </p>
+        <div class="mt-5 mb-5">
+            <button class="btn btn-danger btn-lg del-btn" type="button">Delete Your Account</button>
+        </div>
+        <div class="acc-del-container acc-del-close">
+            <form action="/delete" method="post" class="acc-del">
+                <p class="mt-3">Are you sure?<br>Do you want to delete your account?</p>
+                <input name="account" value="{{ user[0]['id'] }}" hidden>
+                <div class="mt-5">
+                    <button type="submit" class="btn btn-danger mb-5 btn-lg">DELETE</button>
+                    <button type="button" class="btn btn-danger mb-5 btn-lg acc-del-cancel">CANCEL</button>
+                </div>
+            </form>
+        </div>
+    </div>
 {% endblock %}
 
 {% block script %}
     <script src="../static/myprofile.js"></script>
+    <script src="../static/register.js"></script>
 {% endblock %}
-
-<!-- TODO configure DELETE YOUR ACCOUNT button -->

@@ -9,9 +9,16 @@
         <div class="mb-4">
             <input size="30" autocomplete="off" autofocus class="form-control form-control-md mx-auto w-auto" id="username" name="username" placeholder="Username" type="text" required>
         </div>
-        <div class="mb-4">
-            <input size="30" autocomplete="off" class="form-control form-control-md mx-auto w-auto" id="password" name="password" placeholder="Password" type="password" required>
+        <div class="mb-4 d-flex flex-nowrap">
+            <input size="30" autocomplete="off" class="form-control form-control mx-auto w-auto pw-inp" name="password" placeholder="Password" type="password" style="position: relative;">
+            <div class="input-group-prepend" style="position: absolute; margin-left: calc(50% + 110px) !important;">
+                <button class="btn btn-primary pw-btn" type="button" style="opacity: .5;"><i class="bi bi-eye bieye"></i></button>
+            </div>
         </div>
         <button class="btn btn-primary" type="submit">Log In</button>
     </form>
+{% endblock %}
+
+{% block script %}
+    <script src="../static/register.js"></script>
 {% endblock %}

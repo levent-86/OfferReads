@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block main %}
-    {% if receiver_user and receiver_user[0]["receiver"] == session["user_id"] or offerer_user and offerer_user[0]["id"] == session["user_id"] %}
+    {% if receiver_user and receiver_user[0]["receiver"] == session["user_id"] and offerer_book and offerer_book[0]["is_available"] == 1 and offerer_book[0]["is_offered"] == 1 or offerer_user and offerer_user[0]["id"] == session["user_id"] %}
         <!-- Bredcrumbs -->
         <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
             <ol class="breadcrumb">
@@ -22,7 +22,7 @@
                 <div class="col-sm-3">
                     <p class="mt-5 text-muted">User Informations</p>
                     <div class="mt-5">
-                        {% if offerer_user[0]['picture'] != None %}
+                        {% if offerer_user[0]['picture'] %}
                             <img src="../static/pictures/{{ offerer_user[0]['id'] }}/pp/{{ offerer_user[0]['picture'] }}" style="width: 8rem; height: 8rem;" alt="profile picture"><br>
                         {% else %}
                             <img src="../static/person-circle.svg" style="width: 8rem; height: 8rem; opacity: .5;" alt="profile picture"><br>
@@ -40,18 +40,18 @@
                     <p class="mt-5 mb-4 text-muted">{{ book_date }}</p>
                     <h4>{{ offerer_book[0]['title'].title() }} - {{ offerer_book[0]['author'].title() }} </h4>
                     {% for book_image in book_images %}
-                        {% if book_image.image != None %}
+                        {% if book_image.image %}
                             <img src="../static/pictures/{{ offerer_user[0]['id'] }}/bp/{{ book_image.image }}" class="each-image" alt="book images" style="width: 10rem; height: 14rem; object-fit: cover; margin: .2rem; cursor: zoom-in;">
                         {% else %}
                             <img src="../static/book-circle.svg" class="each-image" alt="book images" style="width: 10rem; height: 14rem; object-fit: cover; margin: .2rem; opacity: .5;">
                         {% endif %}
                     {% endfor %}
-                    {% if offerer_book[0]['condition'] != None %}
+                    {% if offerer_book[0]['condition'] %}
                         <p class="mt-4">Condition: {{ offerer_book[0]['condition'] }}</p>
                     {% else %}
                         <p class="mt-4">No condition information.</p>
                     {% endif %}
-                    {% if offerer_book[0]['description'] != None %}
+                    {% if offerer_book[0]['description'] %}
                         <h5 class="mt-4">Book Description</h5>
                         <p class="mb-5">{{ offerer_book[0]['description'] }}</p>
                     {% else %}
@@ -84,7 +84,7 @@
 
         <!-- Modal for pictures -->
         {% for book_image in book_images %}
-            {% if book_image.image != None %}
+            {% if book_image.image %}
                 <div class="book-modal image-close">
                     <p class="mt-3 text-white">Click image to close</p>
                     <img src="../static/pictures/{{ offerer_user[0]['id'] }}/bp/{{ book_image.image }}" class="img-fluid" alt="book images">
@@ -93,12 +93,13 @@
         {% endfor %}
 
     {% else %}
-        <p>THere's no book here.</p>
+        <script>
+            // https://www.w3schools.com/jsref/met_loc_assign.asp
+            window.location.assign("/unavailable");
+        </script>
     {% endif %}
 {% endblock %}
 
 {% block script %}
-    {% if receiver_user and receiver_user[0]["receiver"] == session["user_id"] or offerer_user and offerer_user[0]["id"] == session["user_id"] %}
-        <script src="../static/book.js"></script>
-    {% endif %}
+    <script src="../static/book.js"></script>
 {% endblock %}

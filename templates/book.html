@@ -1,11 +1,11 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    {{ book_details[0]["title"].title() }}
+    {{ books_name }}
 {% endblock %}
 
 {% block main %}
-    {% if book_details[0]["is_offered"] == 0 and book_details[0]["is_available"] == 1 or user_details[0]["userid"] == session["user_id"] %}
+    {% if book_details and book_details[0]["is_offered"] == 0 and book_details[0]["is_available"] == 1 or user_details and user_details[0]["userid"] == session["user_id"] %}
         <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="#" onclick="history.go(-1)">Turn Back</a></li>
@@ -159,13 +159,13 @@
             {% endif %}
         </div>
     {% else %}
-        <p>There's no book here.</p>
+        <script>
+            window.location.assign("/unavailable");
+        </script>
     {% endif %}
 {% endblock %}
 
 {% block script %}
-    {% if book_details[0]["is_offered"] == 0 and book_details[0]["is_available"] == 1 or user_details[0]["userid"] == session["user_id"] %}
-        <script src="../static/book.js"></script>
-        <script src="../static/exchange.js"></script>
-    {% endif %}
+    <script src="../static/book.js"></script>
+    <script src="../static/exchange.js"></script>
 {% endblock %}

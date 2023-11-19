@@ -21,11 +21,11 @@
 
     <!-- List of cards part -->
     <div class="d-flex flex-row flex-wrap justify-content-around align-items-center">
-        {% if all_books != None %}
+        {% if all_books %}
             {% for book in all_books %}
                 <div class="card-deck mt-5">
                     <div class="card mb-4" style="width: 18rem; height: 36rem;" >
-                        {% if book["image"] != None %}
+                        {% if book["image"] %}
                             <a href="{{ url_for('book', books_id=book.bookid, books_name=book.title) }}"><img class="card-img-top" src="../static/pictures/{{ book.userid }}/bp/{{ book['image'] }}" alt="Card image" style="height: 18rem; width: 18rem; object-fit: cover;"></a>
                         {% else %}
                             <a href="{{ url_for('book', books_id=book.bookid, books_name=book.title) }}"><img class="card-img-top" src="../static/book-circle.svg" alt="Card image" style="height: 18rem; width: 18rem; object-fit: cover; opacity: .5;"></a>
@@ -33,7 +33,7 @@
                         <div class="card-body">
                             <h5 class="card-title">{{ book["title"].title() }}</h5>
                             <p class="card-text">{{ book["author"].title() }}</p>
-                            {% if book["condition"] != None %}
+                            {% if book["condition"] %}
                                 <p class="card-text">Condition: {{ book["condition"].title() }}</p>
                             {% endif %}
                             <a href="{{ url_for('user', username=book.username) }}"><p class="card-text">{{ book["username"] }}</p></a>

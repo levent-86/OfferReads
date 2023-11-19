@@ -1,4 +1,5 @@
 import os
+import shutil
 from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 from flask_session import Session
@@ -298,6 +299,13 @@ def offered(offered_id, offered_name):
 
 
 
+@app.route("/unavailable")
+@login_required
+def unavailable():
+    # Show this when the user tries to see the books that should not see
+    return render_template("unavailable.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), offer_notification=offer_notification())
+
+
 
 @app.route("/messages", methods=["GET", "POST"])
 @login_required
@@ -305,7 +313,7 @@ def messages():
     # Display messages and UPDATE database
 
     # Display all received messages
-    messages = db.execute("SELECT users.username, COUNT(CASE WHEN is_readed = 0 THEN 1 END) AS count FROM messages JOIN users ON sender = users.id WHERE receiver = ? GROUP BY sender ORDER BY messages.id DESC;", session["user_id"])
+    messages = db.execute("SELECT users.username, COUNT(CASE WHEN is_readed = 0 THEN 1 END) AS count FROM messages JOIN users ON sender = users.id WHERE receiver = ? AND NOT users.username = 'This Profile Deleted' GROUP BY sender ORDER BY messages.id DESC;", session["user_id"])
 
     # Set as readed when user click to message when method is POST
     if request.method == "POST":
@@ -378,10 +386,21 @@ def user(username):
     # Query the user informations
     user = db.execute("SELECT id, username, country, city, picture, strftime('%m/%d/%Y %H:%M', users.date) AS date FROM users WHERE username = ?", username)
 
+    # Redirect user to an empty place when user seeking a user don't exists 
+    if not user:
+        return redirect("/unknown")
+
     # Query the user's books
     books = db.execute("SELECT (books.id) AS id, title, author, condition, strftime('%m/%d/%Y %H:%M', books.date) AS date, image FROM books JOIN images ON books.id = images.book_id WHERE books.user_id IN (SELECT id FROM users WHERE username = ?) AND is_offered = 0 AND is_available = 1 GROUP BY books.id;", username)
 
     return render_template("user.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), offer_notification=offer_notification(), user=user, books=books)
+
+
+
+@app.route("/unknown")
+@login_required
+def unknown():
+    return render_template("unknown.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), offer_notification=offer_notification())
 
 
 
@@ -439,6 +458,8 @@ def logout():
     # Clear all users
     session.clear()
 
+    flash("Logged out.")
+
     # Redirect user to index.html page
     return redirect("/")
 
@@ -473,6 +494,16 @@ def register():
             if user_username in all_users[i]["username"]:
                 flash("The username you choose already exists.")
                 return redirect("/register")
+        
+        # Ensure if username has a space character
+        if user_username.find(" ") > -1:
+            flash("Space character is not allowed in the \"username\" field.")
+            return redirect("/register")
+        
+        # Ensure if username less than 30 characters
+        if len(user_username) > 30:
+            flash("Username can not be more than 30 characters.")
+            return redirect("/register")
         
         # Ensure if user filled email field
         if not user_email:
@@ -542,7 +573,7 @@ def register():
 def myprofile():
     # Collect user informations from database to variables
     all_users = db.execute("SELECT * FROM users;")
-    database = db.execute("SELECT * FROM users WHERE id = ?;", session["user_id"])
+    user = db.execute("SELECT * FROM users WHERE id = ?;", session["user_id"])
     date = db.execute("SELECT strftime('%m,%d, %Y', date) AS date FROM users WHERE id = ?;", session["user_id"])[0]["date"]
 
     if request.method == "POST":
@@ -575,6 +606,16 @@ def myprofile():
                     return redirect("/myprofile")
                 elif input_uname not in all_users[i]["username"]:
                     db.execute("UPDATE users SET username = ? WHERE id = ?;", input_uname, session["user_id"])
+        
+        # Ensure if username has a space character
+        if input_uname.find(" ") > -1:
+            flash("Space character is not allowed in the \"username\" field.")
+            return redirect("/register")
+        
+        # Ensure if username less than 30 characters
+        if len(input_uname) > 30:
+            flash("Username can not be more than 30 characters.")
+            return redirect("/register")
 
         # Ensure if email is already exists in the database and update if not exists
         if input_email:
@@ -585,10 +626,35 @@ def myprofile():
                 elif input_email not in all_users[i]["email"]:
                     db.execute("UPDATE users SET email = ? WHERE id = ?;", input_email, session["user_id"])
         
+        # Warn user in any combination of password fields misuse
+        if not input_password and not input_new_password and input_confirm_password:
+            flash("Please insert your old password.")
+            return redirect("/myprofile")
+        
+        if not input_password and input_new_password and not input_confirm_password:
+            flash("Please insert your old password.")
+            return redirect("/myprofile")
+        
+        if not input_password and input_new_password and input_confirm_password:
+            flash("Please insert your old password.")
+            return redirect("/myprofile")
+        
+        if input_password and not input_new_password and not input_confirm_password:
+            flash("Please insert your new password.")
+            return redirect("/myprofile")
+        
+        if input_password and input_new_password and not input_confirm_password:
+            flash("Please confirm your new password.")
+            return redirect("/myprofile")
+        
+        if input_password and not input_new_password and input_confirm_password:
+            flash("Please insert your new password.")
+            return redirect("/myprofile")
+        
         # Save the new password if user inputs
-        if input_password:
+        if input_password and input_new_password and input_confirm_password:
             # Ensure if user knows their own current password
-            if not check_password_hash(database[0]["hash"], input_password):
+            if not check_password_hash(user[0]["hash"], input_password):
                 flash("Invalid password.")
                 return redirect("/myprofile")
             # Chack if new password is between 6-21 characters length
@@ -605,7 +671,7 @@ def myprofile():
         
 
         # Save the new country if user inputs
-        if input_country != database[0]["country"]:
+        if input_country != user[0]["country"]:
         # Ensure if user choose the correct country
             if input_country not in countries():
                 flash("Please choose a country in the list.")
@@ -635,7 +701,7 @@ def myprofile():
 
     else:
         
-        return render_template("myprofile.html", greet=greet_user(), message_notification=message_notification(), offer_notification=offer_notification(), countries=countries(), picture=profile_picture(), database=database, date=date)
+        return render_template("myprofile.html", greet=greet_user(), message_notification=message_notification(), offer_notification=offer_notification(), countries=countries(), picture=profile_picture(), user=user, date=date)
 
 
 
@@ -719,10 +785,11 @@ def delete_myprofile():
     lname = request.form.get("lname")
     address = request.form.get("address")
     phone = request.form.get("phone")
-    picture = db.execute("SELECT picture FROM users WHERE id = ?;", session["user_id"])[0]["picture"]
+    image = request.form.get("picture")
+    account = request.form.get("account")
 
     # Collect informations from database
-    database = db.execute("Select * FROM users WHERE id = ?;", session["user_id"])
+    database = db.execute("SELECT * FROM users WHERE id = ?;", session["user_id"])
 
     # Delete first name
     if fname and fname == database[0]["fname"]:
@@ -748,10 +815,15 @@ def delete_myprofile():
         flash("Your information successfully deleted.")
         return redirect("/myprofile")
     
+    # Ensure if user trying to delete the right picture
+    if image and image != database[0]["picture"]:
+        flash("Invalid picture")
+        return redirect("/myprofile")
+    
     # Delete profile picture
-    if picture and picture == database[0]["picture"]:
+    if image and image == database[0]["picture"]:
         # Determine the image path
-        path = f'{os.getcwd()}/static/pictures/{session["user_id"]}/pp/{picture}'
+        path = f'{os.getcwd()}/static/pictures/{session["user_id"]}/pp/{database[0]["picture"]}'
         # Remove image from directory
         os.remove(path)
         # Remove image from database
@@ -759,10 +831,48 @@ def delete_myprofile():
         flash("Your profile picture successfully deleted.")
         return redirect("/myprofile")
     
-    # Show error message in any misuse
-    else:
-        flash("Invalid deletion. Please try again.")
+    # Ensure if user trying to delete the right account
+    if account and int(account) != session["user_id"]:
+        flash("Invalid account.")
         return redirect("/myprofile")
+    
+    # Delete entire profile
+    if account and int(account) == session["user_id"]:
+        # Remove all the taken book offers
+        db.execute("UPDATE books SET is_accepted = -1, is_readed = 1, is_available = 0 WHERE id IN (SELECT offerer FROM offers WHERE receiver = ?);", session["user_id"])
+
+        # Remove all the books
+        db.execute("UPDATE books SET title = 'This Profile Deleted', author = 'This Profile Deleted', condition = 'This Profile Deleted', description = 'This Profile Deleted', is_accepted = -1, is_readed = 1, is_available = 0 WHERE user_id = ?;", session["user_id"])
+
+        # Remove all the messages
+        db.execute("UPDATE messages SET message = 'This Profile Deleted', is_readed = 1 WHERE receiver = ?;", session["user_id"])
+        db.execute("UPDATE messages SET message = 'This Profile Deleted', is_readed = 1 WHERE sender = ?;", session["user_id"])
+
+        # Remove all the picture files from the system
+        # Determine the image path
+        books_path = f'{os.getcwd()}/static/pictures/{session["user_id"]}/bp'
+        profile_pictures_path = f'{os.getcwd()}/static/pictures/{session["user_id"]}/pp'
+
+        # Remove the book pictures if exists
+        if os.path.exists(books_path) == True:
+            # https://docs.python.org/3/library/shutil.html#shutil.rmtree
+            # Remove image from directory
+            shutil.rmtree(books_path)
+
+        # Remove the profile pictures if exists
+        if os.path.exists(profile_pictures_path) == True:
+            # Remove image from directory
+            shutil.rmtree(profile_pictures_path)
+
+        # Remove user informations
+        db.execute("UPDATE users SET username = 'This Profile Deleted', email = 'This Profile Deleted', hash = 'This Profile Deleted', country = 'This Profile Deleted', city = 'This Profile Deleted', fname = 'This Profile Deleted', lname = 'This Profile Deleted', address = 'This Profile Deleted', phone = 'This Profile Deleted', picture = 'This Profile Deleted' WHERE id = ?", session["user_id"])
+
+        # Clear all users
+        session.clear()
+        flash("Your account has been successfully deleted.\nWe are sorry to see you go.")
+
+        # Redirect user to index.html page
+        return redirect("/")
 
 
 
