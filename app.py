@@ -313,7 +313,7 @@ def messages():
     # Display messages and UPDATE database
 
     # Display all received messages
-    messages = db.execute("SELECT users.username, COUNT(CASE WHEN is_readed = 0 THEN 1 END) AS count FROM messages JOIN users ON sender = users.id WHERE receiver = ? AND NOT users.username = 'This Profile Deleted' GROUP BY sender ORDER BY messages.id DESC;", session["user_id"])
+    messages = db.execute("SELECT users.username, COUNT(CASE WHEN is_readed = 0 THEN 1 END) AS count FROM messages JOIN users ON sender = users.id WHERE receiver = ? AND NOT users.fname = 'This Profile Deleted' GROUP BY sender ORDER BY messages.id DESC;", session["user_id"])
 
     # Set as readed when user click to message when method is POST
     if request.method == "POST":
@@ -491,7 +491,7 @@ def register():
 
         # Ensure if username is already exists in the database
         for i in range(len(all_users)):
-            if user_username in all_users[i]["username"]:
+            if user_username == all_users[i]["username"]:
                 flash("The username you choose already exists.")
                 return redirect("/register")
         
@@ -517,7 +517,7 @@ def register():
         
         # Ensure if email is not already exists in the database
         for i in range(len(all_users)):
-            if user_email in all_users[i]["email"]:
+            if user_email == all_users[i]["email"]:
                 flash("The email you entered already exists.")
                 return redirect("/register")
         
@@ -598,33 +598,42 @@ def myprofile():
         if input_lname:
             db.execute("UPDATE users SET lname = ? WHERE id = ?;", input_lname.lower(), session["user_id"])
 
-        # Ensure if username is already exists in the database and update if not exists
-        if input_uname:
-            for i in range(len(all_users)):
-                if input_uname in all_users[i]["username"]:
-                    flash("The username you choose already exists.")
-                    return redirect("/myprofile")
-                elif input_uname not in all_users[i]["username"]:
-                    db.execute("UPDATE users SET username = ? WHERE id = ?;", input_uname, session["user_id"])
-        
-        # Ensure if username has a space character
-        if input_uname.find(" ") > -1:
+        # Ensure if username has no a space character
+        if input_uname and input_uname.find(" ") > -1:
             flash("Space character is not allowed in the \"username\" field.")
             return redirect("/register")
         
         # Ensure if username less than 30 characters
-        if len(input_uname) > 30:
+        if input_uname and len(input_uname) > 30:
             flash("Username can not be more than 30 characters.")
             return redirect("/register")
 
-        # Ensure if email is already exists in the database and update if not exists
+        # Ensure if username is already exists in the database and update if not exists
+        if input_uname:
+            for i in range(len(all_users)):
+                if input_uname == all_users[i]["username"]:
+                    flash("The username you choose already exists.")
+                    return redirect("/myprofile")
+        
+        # Update the username
+        if input_uname:
+            db.execute("UPDATE users SET username = ? WHERE id = ?;", input_uname, session["user_id"])
+
+        # Ensure if user input a valid email
+        if input_email and "@" not in input_email:
+            flash("Please choose a valid E-mail address.")
+            return redirect("/myprofile")
+
+        # Ensure if email is already exists in the database
         if input_email:
             for i in range(len(all_users)):
-                if input_uname in all_users[i]["email"]:
+                if input_email == all_users[i]["email"]:
                     flash("The email you entered already exists.")
                     return redirect("/myprofile")
-                elif input_email not in all_users[i]["email"]:
-                    db.execute("UPDATE users SET email = ? WHERE id = ?;", input_email, session["user_id"])
+        
+        #  Update the Email
+        if input_email:
+            db.execute("UPDATE users SET email = ? WHERE id = ?;", input_email, session["user_id"])
         
         # Warn user in any combination of password fields misuse
         if not input_password and not input_new_password and input_confirm_password:
@@ -671,7 +680,7 @@ def myprofile():
         
 
         # Save the new country if user inputs
-        if input_country != user[0]["country"]:
+        if input_country != user[0]["country"].title():
         # Ensure if user choose the correct country
             if input_country not in countries():
                 flash("Please choose a country in the list.")
@@ -842,7 +851,7 @@ def delete_myprofile():
         db.execute("UPDATE books SET is_accepted = -1, is_readed = 1, is_available = 0 WHERE id IN (SELECT offerer FROM offers WHERE receiver = ?);", session["user_id"])
 
         # Remove all the books
-        db.execute("UPDATE books SET title = 'This Profile Deleted', author = 'This Profile Deleted', condition = 'This Profile Deleted', description = 'This Profile Deleted', is_accepted = -1, is_readed = 1, is_available = 0 WHERE user_id = ?;", session["user_id"])
+        db.execute("UPDATE books SET is_accepted = -1, is_readed = 1, is_available = 0 WHERE user_id = ?;", session["user_id"])
 
         # Remove all the messages
         db.execute("UPDATE messages SET message = 'This Profile Deleted', is_readed = 1 WHERE receiver = ?;", session["user_id"])
@@ -865,7 +874,7 @@ def delete_myprofile():
             shutil.rmtree(profile_pictures_path)
 
         # Remove user informations
-        db.execute("UPDATE users SET username = 'This Profile Deleted', email = 'This Profile Deleted', hash = 'This Profile Deleted', country = 'This Profile Deleted', city = 'This Profile Deleted', fname = 'This Profile Deleted', lname = 'This Profile Deleted', address = 'This Profile Deleted', phone = 'This Profile Deleted', picture = 'This Profile Deleted' WHERE id = ?", session["user_id"])
+        db.execute("UPDATE users SET username = ?, email = ?, hash = 'This Profile Deleted', country = 'This Profile Deleted', city = 'This Profile Deleted', fname = 'This Profile Deleted', lname = 'This Profile Deleted', address = 'This Profile Deleted', phone = 'This Profile Deleted', picture = 'This Profile Deleted' WHERE id = ?;", str(session["user_id"]), str(session["user_id"]), session["user_id"])
 
         # Clear all users
         session.clear()
@@ -1060,4 +1069,8 @@ def exchange():
         flash("Your book ready to exchange.")
         return redirect("/mybooks")
     else:
+        user_informations = db.execute("SELECT * FROM users WHERE id = ?", session["user_id"])
+        if not user_informations[0]["fname"] or not user_informations[0]["lname"] or not user_informations[0]["address"] or not user_informations[0]["phone"]:
+            flash("To exchenage books, the \"None\" fields must be filled first.\n(Except for profile picture)")
+            return redirect("/myprofile")
         return render_template("exchange.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), offer_notification=offer_notification(), conditions=conditions)

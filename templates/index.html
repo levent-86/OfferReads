@@ -6,17 +6,8 @@
 
 {% block main %}
     <!-- Search part -->
-    <div class="input-group mb-5 container-md">
-        <select name="search" class="form-select" style="max-width: 9rem; height: auto;">
-            <option disabled selected hidden>Search by</option>
-            <option value="author">Author</option>
-            <option value="title">Title</option>
-        </select>
-        <input type="search" class="form-control" placeholder="search" aria-label="search" aria-describedby="button-addon2">
-        <datalist id="datalistoptions">
-            <option value="{{ title }}">
-        </datalist>
-        <button class="btn btn-primary" type="button" id="button-addon2"><i class="bi bi-search"></i> Search</button>
+    <div class="mb-5 container-md input-group">
+        <input type="search" class="form-control" placeholder="Search">
     </div>
 
     <!-- List of cards part -->
@@ -43,12 +34,13 @@
                         </div>
                     </div>
                 </div>
+            {% endfor %}
         {% else %}
                 <p>There is no book here.</p>
-            {% endfor %}
         {% endif %}
     </div>
 {% endblock %}
 
-<!-- TODO: -->
-<!-- add for loop to option value (l-17) -->
+{% block script %}
+    <script src="../static/index.js"></script>
+{% endblock %}

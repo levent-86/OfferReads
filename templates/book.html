@@ -40,7 +40,7 @@
                         {% if book_image.image %}
                             <img src="../static/pictures/{{ user_details[0]['userid'] }}/bp/{{ book_image.image }}" class="each-image" alt="book images" style="width: 10rem; height: 14rem; object-fit: cover; margin: .2rem; cursor: zoom-in;">
                         {% else %}
-                            <img src="../static/book-circle.svg" class="each-image" alt="book images" style="width: 10rem; height: 14rem; object-fit: cover; margin: .2rem; cursor: zoom-in; opacity: .5;">
+                            <img src="../static/book-circle.svg" class="each-image" alt="book images" style="width: 10rem; height: 14rem; object-fit: cover; margin: .2rem; opacity: .5;">
                         {% endif %}
                     {% endfor %}
                     {% if book_details[0]["condition"] %}
@@ -50,7 +50,7 @@
                     {% endif %}
                     {% if book_details[0]["description"] %}
                         <h5 class="mt-4">Book Description</h5>
-                        <p class="mb-5">{{ book_details[0]["description"] }}</p>
+                        <pre class="mb-5">{{ book_details[0]["description"] }}</pre>
                     {% else %}
                         <p class="mb-5">No description information.</p>
                     {% endif %}
