@@ -35,10 +35,6 @@ ul, li {
 }
 
 /* layout.html */
-
-/* nav h1 {
-    color: black;
-} */
 body {
     background-color: var(--background);
     font-family: var(--texts);
@@ -50,9 +46,6 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 800;
     letter-spacing: 2pt;
 }
-/* .brand-name {
-    color: var(--accent);
-} */
 .mini-profile-picture {
     width: 3rem;
     height: 3rem;
@@ -73,6 +66,16 @@ select option {
 }
 input[placeholder="Search"] {
     margin: 0 1rem;
+}
+
+/* index.html part */
+.index-card {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+.card-capitalize {
+    text-transform: capitalize;
 }
 
 /* Register */
@@ -261,7 +264,3 @@ input[type="file"] {
         flex-wrap: wrap;
     }
 }
-
-/* .offered_close {
-    display: none;
-} */

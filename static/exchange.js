@@ -59,7 +59,7 @@ textArea.addEventListener("focusout", () => {
 })
 
 // Count the characters on the <textarea> tag
-textArea.addEventListener("keyup", () => {
+textArea.addEventListener("input", () => {
     charCounter.innerHTML = 600 - textArea.value.length;
     if (charCounter.innerHTML < 0) {
         return alert("Description length should be 600 characters only.");

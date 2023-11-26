@@ -3,6 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:title" content="OfferReads">
+    <meta property="og:description" content="A web app where individuals can showcase their books for book swapping and make offers to each other for exchanging books.">
+    <meta name="keywords" content="Book Exchange, Book Swap, Book Offer, Second Hand Books">
     
     <!-- https://getbootstrap.com/docs/5.3/getting-started/download/ -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/5.3.2/flatly/bootstrap.min.css" integrity="sha512-rx+BMEjKes84XHg1erhvtq7Mqxm/lm6w4WMoCtDAaTMtUzT5iK5hNTu8mc2+yPNSldAX5hheN/ZhtNQjjYy5nA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -80,13 +83,14 @@
       </header>
     {% endif %}
 
-    <main class="container-fluid text-center py-5">
+    <main class="container-fluid text-center py-5 mt-5 mb-5">
         {% block main %}{% endblock %}
     </main>
 
-    <footer>
-
+    <footer class="bg-primary text-center text-lg-start mt-5 bg d-flex justify-content-center align-items-center" style="height: 10rem;">
+        <p class="text-center text-white">Harvard University, CS50X Final Project By Mustafa Levent Fidancı - 2023</p>
     </footer>
+    
     {% block script %}{% endblock %}
 </body>
 </html>

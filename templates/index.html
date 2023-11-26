@@ -5,29 +5,33 @@
 {% endblock %}
 
 {% block main %}
-    <!-- Search part -->
+    <!-- Search -->
     <div class="mb-5 container-md input-group">
-        <input type="search" class="form-control" placeholder="Search">
+        {% if pagination_books %}
+            <input type="search" class="form-control" placeholder="Search a book">
+        {% endif %}
     </div>
 
-    <!-- List of cards part -->
+    <!-- List of cards -->
     <div class="d-flex flex-row flex-wrap justify-content-around align-items-center">
-        {% if all_books %}
-            {% for book in all_books %}
-                <div class="card-deck mt-5">
+        {% if pagination_books %}
+            {% for book in pagination_books %}
+                <div class="card-deck prev-card-deck mt-5 mb-5">
                     <div class="card mb-4" style="width: 18rem; height: 36rem;" >
                         {% if book["image"] %}
                             <a href="{{ url_for('book', books_id=book.bookid, books_name=book.title) }}"><img class="card-img-top" src="../static/pictures/{{ book.userid }}/bp/{{ book['image'] }}" alt="Card image" style="height: 18rem; width: 18rem; object-fit: cover;"></a>
                         {% else %}
                             <a href="{{ url_for('book', books_id=book.bookid, books_name=book.title) }}"><img class="card-img-top" src="../static/book-circle.svg" alt="Card image" style="height: 18rem; width: 18rem; object-fit: cover; opacity: .5;"></a>
                         {% endif %}
-                        <div class="card-body">
-                            <h5 class="card-title">{{ book["title"].title() }}</h5>
+                        <div class="card-body d-flex flex-column justify-content-around">
+                            <h5 class="card-title index-card">{{ book["title"].title() }}</h5>
                             <p class="card-text">{{ book["author"].title() }}</p>
                             {% if book["condition"] %}
                                 <p class="card-text">Condition: {{ book["condition"].title() }}</p>
+                            {% else %}
+                                <p class="card-text">No Condition Information</p>
                             {% endif %}
-                            <a href="{{ url_for('user', username=book.username) }}"><p class="card-text">{{ book["username"] }}</p></a>
+                            <span>Exchanger: </span><a href="{{ url_for('user', username=book.username) }}"><p class="card-text">{{ book["username"] }}</p></a>
                         </div>
                         <div class="card-footer">
                             <small class="text-muted">{{ book["date"] }}</small>
@@ -36,11 +40,53 @@
                 </div>
             {% endfor %}
         {% else %}
-                <p>There is no book here.</p>
+                <p class="mt-5 mb-5"  style="height: 100vh;">There is no book here.</p>
         {% endif %}
     </div>
+
+    <div class="d-flex flex-row flex-wrap justify-content-around align-items-center new-card-deck">
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination_books %}
+        <nav aria-label="Page navigation" class="d-flex justify-content-center mt-5 mb-5">
+            <ul class="pagination pagination-lg d-flex flex-wrap">
+                <!-- Previous button -->
+                <form action="/" method="post" class="page-item">
+                    <input name="pagination" value="{{ (pagination_books[0]['bookid'] / 10 - 1) | round | int }}" hidden>
+                    {% if pagination_books[0]["bookid"] < 10 %}
+                        <button type="submit" class="page-link disabled" aria-label="Previous"><span aria-hidden="true">&laquo;</span></button>
+                    {% else %}
+                        <button type="submit" class="page-link" aria-label="Previous"><span aria-hidden="true">&laquo;</span></button>
+                    {% endif %}
+                </form>
+
+                <!-- Numbers -->
+                    <form action="/" method="post" class="page-item d-flex flex-row align-items-center index-form">
+                        <select name="pagination" style="width: 5rem; height: 100%; text-align: center;" class="page-link index-option">
+                            <option value="{{ (pagination_books[0]['bookid'] / 10) | round | int }}" selected hidden>{{ (pagination_books[0]["bookid"] / 10) | round | int + 1 }}</option>
+                            {% for i in range(pages) %}
+                                <option value="{{ i }}">{{ i + 1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+
+                <!-- Next button -->
+                <form action="/" method="post" class="page-item">
+                    <input name="pagination" value="{{ (pagination_books[0]['bookid'] / 10 + 1) | round | int }}" hidden>
+                    {% if pages == (pagination_books[0]['bookid'] / 10 + 1) | round | int %}
+                        <button type="submit" class="page-link disabled"><span aria-hidden="true">&raquo;</span></button>
+                    {% else %}
+                        <button type="submit" class="page-link"><span aria-hidden="true">&raquo;</span></button>
+                    {% endif %}
+                </form>
+            </ul>
+        </nav>
+    {% endif %}
 {% endblock %}
 
 {% block script %}
-    <script src="../static/index.js"></script>
+    {% if pagination_books %}
+        <script src="../static/index.js"></script>
+    {% endif %}
 {% endblock %}

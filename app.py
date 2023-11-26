@@ -1,10 +1,11 @@
 import os
 import shutil
 from cs50 import SQL
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import Flask, flash, redirect, render_template, request, session, url_for, jsonify
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
+import math
 
 from helpers import countries, login_required, login_not_required, greet_user, allowed_file, profile_picture, message_notification, offer_notification
 
@@ -32,18 +33,43 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    # Show all books, search
+    # Show all books, paginate the results
+
+    # Query all available non-offered books for index.html
+    all_books = db.execute("SELECT * FROM books WHERE is_offered = 0 AND is_available = 1;")
+
+    # Calculate the total pages of pagination
+    pages = math.ceil(len(all_books) / 10)
 
     if request.method == "POST":
-        # Search button
-        ...
+        
+        # Get the page number from pagination buttons
+        number = request.form.get("pagination")
 
-    # Redirect to clicked book or user / show all books
+        # Query the database for pagination's buttons
+        pagination_books = db.execute("SELECT (users.id) AS userid, username, (books.id) AS bookid, title, author, condition, image, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books JOIN users ON books.user_id = users.id INNER JOIN images ON books.id = images.book_id WHERE is_offered = 0 AND is_available = 1 GROUP BY books.id, images.book_id ORDER BY books.id ASC LIMIT 10 OFFSET ?;", int(number) * 10)
+
+        return render_template("index.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), offer_notification=offer_notification(), pagination_books=pagination_books, pages=pages)
+
     else:
         # Query all available books
-        all_books = db.execute("SELECT (users.id) AS userid, username, (books.id) AS bookid, title, author, condition, image, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books JOIN users ON books.user_id = users.id INNER JOIN images ON books.id = images.book_id WHERE is_offered = 0 AND is_available = 1 GROUP BY books.id, images.book_id ORDER BY RANDOM();")
+        pagination_books = db.execute("SELECT (users.id) AS userid, username, (books.id) AS bookid, title, author, condition, image, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books JOIN users ON books.user_id = users.id INNER JOIN images ON books.id = images.book_id WHERE is_offered = 0 AND is_available = 1 GROUP BY books.id, images.book_id ORDER BY books.id ASC LIMIT 10 OFFSET 0;")
 
-        return render_template("index.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), offer_notification=offer_notification(), all_books=all_books)
+        return render_template("index.html", greet=greet_user(), picture=profile_picture(), message_notification=message_notification(), offer_notification=offer_notification(), pagination_books=pagination_books, pages=pages)
+
+
+
+# https://cs50.harvard.edu/x/2023/weeks/9/
+# https://cdn.cs50.net/2022/fall/lectures/9/src9.pdf
+@app.route("/search")
+def search():
+    q = request.args.get("q")
+    if q:
+        books = db.execute("SELECT (users.id) AS userid, username, (books.id) AS bookid, title, author, condition, image, strftime('%m/%d/%Y %H:%M', books.date) AS date FROM books JOIN users ON books.user_id = users.id INNER JOIN images ON books.id = images.book_id WHERE is_offered = 0 AND is_available = 1 AND title LIKE ? GROUP BY books.id, images.book_id ORDER BY books.id ASC LIMIT 50;", "%" + q + "%")
+    else:
+        books = []
+    print(jsonify(books))
+    return jsonify(books)
 
 
 
