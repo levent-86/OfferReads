@@ -7,7 +7,7 @@
 {% block main %}
     {% if messages %}
         {% for message in messages %}
-            <ul class="list-group mb-3">
+            <ul class="list-group mb-3" style="height: 100vh;">
                 <form action="/messages" method="post">
                     <input name="readed" value="{{ message.username }}" hidden>
                     <button type="submit" style="width: 100%; border: none;">

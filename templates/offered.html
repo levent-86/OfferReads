@@ -23,7 +23,7 @@
                     <p class="mt-5 text-muted">User Informations</p>
                     <div class="mt-5">
                         {% if offerer_user[0]['picture'] %}
-                            <img src="../static/pictures/{{ offerer_user[0]['id'] }}/pp/{{ offerer_user[0]['picture'] }}" style="width: 8rem; height: 8rem;" alt="profile picture"><br>
+                            <img src="../static/pictures/{{ offerer_user[0]['id'] }}/pp/{{ offerer_user[0]['picture'] }}" style="width: 8rem; height: 8rem; object-fit: cover;" alt="profile picture"><br>
                         {% else %}
                             <img src="../static/person-circle.svg" style="width: 8rem; height: 8rem; opacity: .5;" alt="profile picture"><br>
                         {% endif %}
@@ -53,7 +53,7 @@
                     {% endif %}
                     {% if offerer_book[0]['description'] %}
                         <h5 class="mt-4">Book Description</h5>
-                        <pre class="mb-5">{{ offerer_book[0]['description'] }}</pre>
+                        <p class="mb-5" style="text-align: left;">{{ offerer_book[0]['description'] }}</p>
                     {% else %}
                         <p class="mb-5">No description information.</p>
                     {% endif %}

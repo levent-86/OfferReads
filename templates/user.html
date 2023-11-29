@@ -12,7 +12,7 @@
                 <p class="mt-5 text-muted">User Informations</p>
                 <div class="mt-5">
                     {% if user[0]['picture'] %}
-                        <img src="../static/pictures/{{ user[0]['id'] }}/pp/{{ user[0]['picture'] }}" style="width: 8rem; height: 8rem;" alt="profile picture">
+                        <img src="../static/pictures/{{ user[0]['id'] }}/pp/{{ user[0]['picture'] }}" style="width: 8rem; height: 8rem; object-fit: cover;" alt="profile picture">
                     {% else %}
                         <img src="../static/person-circle.svg" style="width: 8rem; height: 8rem; opacity: .5;" alt="profile picture">
                     {% endif %}

@@ -5,9 +5,9 @@
 {% endblock %}
 
 {% block main %}
-    <form action="/login" method="post">
+    <form action="/login" method="post" style="height: 100vh;">
         <div class="mb-4">
-            <input size="30" autocomplete="off" autofocus class="form-control form-control-md mx-auto w-auto" id="username" name="username" placeholder="Username" type="text" required>
+            <input size="30" autocomplete="off" autofocus class="form-control form-control-md mx-auto w-auto mt-5" id="username" name="username" placeholder="Username" type="text" required>
         </div>
         <div class="mb-4 d-flex flex-nowrap">
             <input size="30" autocomplete="off" class="form-control form-control mx-auto w-auto pw-inp" name="password" placeholder="Password" type="password" style="position: relative;">
@@ -15,7 +15,7 @@
                 <button class="btn btn-primary pw-btn" type="button" style="opacity: .5;"><i class="bi bi-eye bieye"></i></button>
             </div>
         </div>
-        <button class="btn btn-primary" type="submit">Log In</button>
+        <button class="btn btn-primary mb-5" type="submit">Log In</button>
     </form>
 {% endblock %}
 
