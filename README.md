@@ -16,9 +16,15 @@ Flask==2.2.2
 
 Flask-Session==0.5.0
 
+python-dotenv==0.21.0
+
 requests==2.28.1
 
 (See "requirements.txt" file.)
+
+Don't forget to create .env file in your root folder and insert a secret key inside.
+Example:
+"SECRET_KEY"="rondombytescominghere"
 
 ### Folder tree of the project
 OfferReads/

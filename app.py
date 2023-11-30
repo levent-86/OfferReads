@@ -6,6 +6,7 @@ from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 import math
+from dotenv import load_dotenv
 
 from helpers import countries, login_required, login_not_required, greet_user, allowed_file, profile_picture, message_notification, offer_notification
 
@@ -13,8 +14,12 @@ from helpers import countries, login_required, login_not_required, greet_user, a
 # Configure application
 app = Flask(__name__)
 
+# take environment variables from .env.
+# https://pypi.org/project/python-dotenv/
+load_dotenv()
+
 # Set a secret key
-app.secret_key = "justrandombyteshere"
+app.secret_key = os.getenv('SECRET_KEY')
 
 # Use sqlite database with cs50
 db = SQL("sqlite:///exchange.db")

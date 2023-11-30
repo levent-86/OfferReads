@@ -7,7 +7,7 @@
 {% block main %}
     {% if offers %}
         {% for offer in offers %}
-            <ul class="list-group mb-3">
+            <ul class="list-group mb-5" style="height: 100vh;">
                 <form action="/notifications" method="post">
                     <input name="offerer" value="{{ offer.offerer_username }}" hidden>
                     <input name="offerer_book_id" value="{{ offer.offerer_book_id }}" hidden>
